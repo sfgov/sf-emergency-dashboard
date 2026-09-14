@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { RefreshCw } from 'lucide-react';
 import {
   IncidentMap,
   FilterPanel,
@@ -94,7 +95,7 @@ function App() {
           {loading ? (
             <div className="loading">
               <div className="spinner"></div>
-              <p>Loading incidents...</p>
+              Loading
             </div>
           ) : (
             <>
@@ -142,13 +143,13 @@ function App() {
       </main>
 
       <footer className="app-footer">
-        <p>
-          Data from <a href="https://datasf.org" target="_blank" rel="noopener noreferrer">SF OpenData</a>
-          {' | '}
-          Last updated: {new Date().toLocaleString()}
-          {' | '}
-          <button onClick={refetch} className="refresh-btn">Refresh</button>
-        </p>
+        <span>
+          Data: <a href="https://data.sf.gov" target="_blank" rel="noopener noreferrer">SF OpenData</a>
+        </span>
+        <button onClick={refetch} className="refresh-btn">
+          <RefreshCw size={10} style={{ marginRight: 4 }} />
+          Refresh
+        </button>
       </footer>
     </div>
   );

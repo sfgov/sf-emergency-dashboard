@@ -1,5 +1,6 @@
 import type { Incident } from '../types/incidents';
 import { format } from 'date-fns';
+import { MapPin } from 'lucide-react';
 
 interface IncidentListProps {
   incidents: Incident[];
@@ -29,7 +30,7 @@ export function IncidentList({ incidents }: IncidentListProps) {
               <div className="incident-description">{incident.description}</div>
             )}
             <div className="incident-location">
-              <span className="location-icon">📍</span>
+              <MapPin size={12} />
               {incident.address || incident.district}
             </div>
           </div>

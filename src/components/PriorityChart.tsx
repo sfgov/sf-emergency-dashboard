@@ -6,10 +6,10 @@ interface PriorityChartProps {
 }
 
 const PRIORITY_COLORS: Record<string, string> = {
-  'E (Emergency)': '#dc2626',
-  'A (Critical)': '#ef4444',
-  'B (Urgent)': '#f97316',
-  'C (Non-urgent)': '#22c55e',
+  'E (Emergency)': '#ff3b30',
+  'A (Critical)': '#ff3b30',
+  'B (Urgent)': '#ff9f0a',
+  'C (Non-urgent)': '#30d158',
 };
 
 export function PriorityChart({ stats }: PriorityChartProps) {
@@ -17,8 +17,8 @@ export function PriorityChart({ stats }: PriorityChartProps) {
 
   return (
     <div className="priority-chart">
-      <h3>Call Priority Breakdown</h3>
-      <p className="chart-subtitle">Distribution of calls by urgency level</p>
+      <h3>Priority</h3>
+      <p className="chart-subtitle">By urgency level</p>
       <div className="priority-content">
         <ResponsiveContainer width="50%" height={200}>
           <PieChart>

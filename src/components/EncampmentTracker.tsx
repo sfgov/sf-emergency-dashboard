@@ -12,9 +12,9 @@ export function EncampmentTracker({ stats, incidents }: EncampmentTrackerProps) 
 
   return (
     <div className="encampment-tracker">
-      <h3>Encampment Tickets (311)</h3>
+      <h3>Encampments</h3>
       <p className="chart-subtitle">
-        {totalOpen + totalClosed} total | {totalOpen} open | {totalClosed} resolved
+        {totalOpen + totalClosed} total — {totalOpen} open, {totalClosed} resolved
       </p>
 
       <div className="encampment-content">

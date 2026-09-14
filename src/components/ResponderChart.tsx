@@ -6,21 +6,21 @@ interface ResponderChartProps {
 }
 
 const RESPONDER_COLORS: Record<string, string> = {
-  'PD': '#3b82f6',
-  'Fire': '#f97316',
-  'EMS': '#ef4444',
-  'Other': '#64748b',
+  'PD': '#2563eb',
+  'Fire': '#ff9f0a',
+  'EMS': '#ff3b30',
+  'Other': '#737373',
 };
 
 export function ResponderChart({ stats }: ResponderChartProps) {
   return (
     <div className="responder-chart">
-      <h3>Who's Responding?</h3>
-      <p className="chart-subtitle">Calls by response unit type</p>
+      <h3>Responders</h3>
+      <p className="chart-subtitle">By unit type</p>
       <ResponsiveContainer width="100%" height={200}>
         <BarChart data={stats} layout="horizontal" margin={{ left: 0, right: 20 }}>
-          <XAxis type="category" dataKey="responder" tick={{ fontSize: 12 }} />
-          <YAxis type="number" tick={{ fontSize: 11 }} />
+          <XAxis type="category" dataKey="responder" tick={{ fontSize: 10, fill: '#737373' }} axisLine={{ stroke: '#262626' }} tickLine={false} />
+          <YAxis type="number" tick={{ fontSize: 10, fill: '#737373' }} axisLine={false} tickLine={false} />
           <Tooltip />
           <Bar dataKey="count" name="Calls">
             {stats.map((entry) => (

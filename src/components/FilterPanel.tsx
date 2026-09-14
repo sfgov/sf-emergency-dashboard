@@ -34,7 +34,7 @@ export function FilterPanel({ filter, onFilterChange, districts }: FilterPanelPr
               className={filter.timeRange === range ? 'active' : ''}
               onClick={() => onFilterChange({ ...filter, timeRange: range })}
             >
-              {range === 'today' ? '24h' : range === 'week' ? '7 days' : '30 days'}
+              {range === 'today' ? '24H' : range === 'week' ? '7D' : '30D'}
             </button>
           ))}
         </div>
