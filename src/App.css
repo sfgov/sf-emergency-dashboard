@@ -3,10 +3,11 @@
 }
 
 :root {
-  --police-color: #ef4444;
+  --police-color: #3b82f6;
   --fire-color: #f97316;
-  --calls311-color: #3b82f6;
+  --calls311-color: #8b5cf6;
   --cad-color: #22c55e;
+  --ems-color: #ef4444;
   --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
   --bg-card: #334155;
@@ -28,10 +29,17 @@ body {
   flex-direction: column;
 }
 
+/* Header */
 .app-header {
-  background: var(--bg-secondary);
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
   padding: 1rem 2rem;
   border-bottom: 1px solid var(--border-color);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .app-header h1 {
@@ -45,6 +53,30 @@ body {
   font-size: 0.875rem;
 }
 
+.header-stats {
+  display: flex;
+  gap: 2rem;
+}
+
+.header-stat {
+  text-align: center;
+}
+
+.header-stat-value {
+  display: block;
+  font-size: 1.75rem;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+.header-stat-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Main Layout */
 .app-main {
   display: flex;
   flex: 1;
@@ -52,7 +84,7 @@ body {
 }
 
 .sidebar {
-  width: 280px;
+  width: 260px;
   background: var(--bg-secondary);
   padding: 1rem;
   overflow-y: auto;
@@ -61,10 +93,439 @@ body {
 
 .content {
   flex: 1;
-  padding: 1rem;
+  padding: 1.5rem;
   overflow-y: auto;
 }
 
+/* Section Headers */
+.section-header {
+  margin: 1.5rem 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.section-header:first-child {
+  margin-top: 0;
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.section-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+/* Charts Row */
+.charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.charts-row.three-col {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+/* Chart Cards */
+.priority-chart, .responder-chart, .hourly-chart,
+.encampment-tracker, .station-chart, .incident-list {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.priority-chart h3, .responder-chart h3, .hourly-chart h3,
+.encampment-tracker h3, .station-chart h3, .incident-list h3 {
+  margin: 0 0 0.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.chart-subtitle {
+  margin: 0 0 0.75rem;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+/* Priority Chart */
+.priority-content {
+  display: flex;
+  align-items: center;
+}
+
+.priority-legend {
+  flex: 1;
+  padding-left: 1rem;
+}
+
+.priority-item {
+  margin-bottom: 0.5rem;
+}
+
+.priority-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.priority-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.priority-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.priority-stats {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-left: 1.25rem;
+}
+
+.priority-count {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.priority-response {
+  color: var(--cad-color);
+}
+
+/* Responder Chart */
+.responder-response-times {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.response-time-item {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.response-time-value {
+  color: var(--text-secondary);
+}
+
+/* Encampment Tracker */
+.encampment-tracker {
+  grid-column: 1 / -1;
+}
+
+.encampment-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.encampment-by-district h4,
+.encampment-recent h4 {
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.encampment-district-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.district-name {
+  width: 80px;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.district-bar-container {
+  flex: 1;
+  height: 16px;
+  background: var(--bg-card);
+  border-radius: 4px;
+  display: flex;
+  overflow: hidden;
+}
+
+.district-bar {
+  height: 100%;
+}
+
+.district-bar.open {
+  background: #f97316;
+}
+
+.district-bar.closed {
+  background: #22c55e;
+}
+
+.district-count {
+  width: 30px;
+  text-align: right;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.encampment-legend {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.legend-dot.open { background: #f97316; }
+.legend-dot.closed { background: #22c55e; }
+
+.encampment-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.encampment-item {
+  padding: 0.5rem;
+  background: var(--bg-card);
+  border-radius: 4px;
+  margin-bottom: 0.4rem;
+}
+
+.encampment-item-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.encampment-status {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+.encampment-status.open {
+  background: rgba(249, 115, 22, 0.2);
+  color: #f97316;
+}
+
+.encampment-status.closed {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+}
+
+.encampment-district {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+.encampment-category {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.encampment-address {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+/* Map */
+.map-container {
+  height: 400px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.popup-content {
+  color: #1e293b;
+}
+
+.popup-content strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.popup-address, .popup-time {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 2px 0;
+}
+
+.popup-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.625rem;
+  font-weight: bold;
+  margin-top: 4px;
+}
+
+.popup-badge-police { background: var(--police-color); color: white; }
+.popup-badge-fire { background: var(--fire-color); color: white; }
+.popup-badge-311 { background: var(--calls311-color); color: white; }
+.popup-badge-cad { background: var(--cad-color); color: white; }
+
+/* Incident List */
+.incident-items {
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.incident-item {
+  padding: 0.6rem;
+  background: var(--bg-card);
+  border-radius: 6px;
+  margin-bottom: 0.4rem;
+  border-left: 3px solid var(--border-color);
+}
+
+.incident-item.incident-police { border-left-color: var(--police-color); }
+.incident-item.incident-fire { border-left-color: var(--fire-color); }
+.incident-item.incident-calls311 { border-left-color: var(--calls311-color); }
+.incident-item.incident-cad { border-left-color: var(--cad-color); }
+
+.incident-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.3rem;
+}
+
+.incident-badge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.6rem;
+  font-weight: bold;
+}
+
+.incident-badge.police { background: var(--police-color); color: white; }
+.incident-badge.fire { background: var(--fire-color); color: white; }
+.incident-badge.calls311 { background: var(--calls311-color); color: white; }
+.incident-badge.cad { background: var(--cad-color); color: white; }
+
+.incident-time {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+.incident-category {
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
+.incident-description {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  margin-top: 0.2rem;
+}
+
+.incident-location {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  margin-top: 0.3rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.location-icon {
+  font-size: 0.8rem;
+}
+
+/* Filter Panel */
+.filter-panel h3 {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+}
+
+.filter-section {
+  margin-bottom: 1.25rem;
+}
+
+.filter-section h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.filter-buttons button {
+  flex: 1;
+  padding: 0.4rem;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  transition: all 0.2s;
+}
+
+.filter-buttons button:hover {
+  background: var(--border-color);
+}
+
+.filter-buttons button.active {
+  background: var(--calls311-color);
+  border-color: var(--calls311-color);
+}
+
+.filter-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.filter-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.filter-checkbox input {
+  accent-color: var(--calls311-color);
+}
+
+.filter-checkbox.police .checkbox-label { color: var(--police-color); }
+.filter-checkbox.fire .checkbox-label { color: var(--fire-color); }
+.filter-checkbox.calls311 .checkbox-label { color: var(--calls311-color); }
+.filter-checkbox.cad .checkbox-label { color: var(--cad-color); }
+
+.district-list {
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+/* Loading */
 .loading {
   display: flex;
   flex-direction: column;
@@ -105,248 +566,6 @@ body {
   cursor: pointer;
 }
 
-/* Stats Summary */
-.stats-summary {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.stat-card {
-  background: var(--bg-secondary);
-  padding: 1rem;
-  border-radius: 8px;
-  text-align: center;
-  border-left: 4px solid var(--border-color);
-}
-
-.stat-card.total { border-left-color: #a855f7; }
-.stat-card.police { border-left-color: var(--police-color); }
-.stat-card.fire { border-left-color: var(--fire-color); }
-.stat-card.calls311 { border-left-color: var(--calls311-color); }
-.stat-card.cad { border-left-color: var(--cad-color); }
-
-.stat-value {
-  font-size: 2rem;
-  font-weight: bold;
-}
-
-.stat-label {
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-  margin-top: 0.25rem;
-}
-
-/* Map */
-.map-container {
-  height: 450px;
-  border-radius: 8px;
-  overflow: hidden;
-  margin-bottom: 1rem;
-}
-
-.popup-content {
-  color: #1e293b;
-}
-
-.popup-content strong {
-  display: block;
-  margin-bottom: 4px;
-}
-
-.popup-address, .popup-time {
-  font-size: 0.75rem;
-  color: #64748b;
-  margin: 2px 0;
-}
-
-.popup-badge {
-  display: inline-block;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 0.625rem;
-  font-weight: bold;
-  margin-top: 4px;
-}
-
-.popup-badge-police { background: var(--police-color); color: white; }
-.popup-badge-fire { background: var(--fire-color); color: white; }
-.popup-badge-311 { background: var(--calls311-color); color: white; }
-.popup-badge-cad { background: var(--cad-color); color: white; }
-
-/* Charts Row */
-.charts-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.district-chart, .station-chart, .incident-list {
-  background: var(--bg-secondary);
-  border-radius: 8px;
-  padding: 1rem;
-}
-
-.district-chart h3, .station-chart h3, .incident-list h3 {
-  margin: 0 0 0.5rem;
-  font-size: 1rem;
-}
-
-.chart-subtitle {
-  margin: 0 0 1rem;
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-}
-
-.charts-row:last-of-type .incident-list {
-  grid-column: 1 / -1;
-}
-
-.charts-row:last-of-type .incident-items {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 0.5rem;
-  max-height: 400px;
-}
-
-/* Incident List */
-.incident-items {
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.incident-item {
-  padding: 0.75rem;
-  background: var(--bg-card);
-  border-radius: 6px;
-  margin-bottom: 0.5rem;
-  border-left: 3px solid var(--border-color);
-}
-
-.incident-item.incident-police { border-left-color: var(--police-color); }
-.incident-item.incident-fire { border-left-color: var(--fire-color); }
-.incident-item.incident-calls311 { border-left-color: var(--calls311-color); }
-.incident-item.incident-cad { border-left-color: var(--cad-color); }
-
-.incident-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
-}
-
-.incident-badge {
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 0.625rem;
-  font-weight: bold;
-}
-
-.incident-badge.police { background: var(--police-color); color: white; }
-.incident-badge.fire { background: var(--fire-color); color: white; }
-.incident-badge.calls311 { background: var(--calls311-color); color: white; }
-.incident-badge.cad { background: var(--cad-color); color: white; }
-
-.incident-time {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-}
-
-.incident-category {
-  font-weight: 500;
-  font-size: 0.875rem;
-}
-
-.incident-description {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  margin-top: 0.25rem;
-}
-
-.incident-location {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  margin-top: 0.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.location-icon {
-  font-size: 0.875rem;
-}
-
-/* Filter Panel */
-.filter-panel h3 {
-  margin: 0 0 1rem;
-  font-size: 1rem;
-}
-
-.filter-section {
-  margin-bottom: 1.5rem;
-}
-
-.filter-section h4 {
-  margin: 0 0 0.5rem;
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-}
-
-.filter-buttons {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.filter-buttons button {
-  flex: 1;
-  padding: 0.5rem;
-  background: var(--bg-card);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.75rem;
-  transition: all 0.2s;
-}
-
-.filter-buttons button:hover {
-  background: var(--border-color);
-}
-
-.filter-buttons button.active {
-  background: var(--calls311-color);
-  border-color: var(--calls311-color);
-}
-
-.filter-checkboxes {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.filter-checkbox {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  font-size: 0.875rem;
-}
-
-.filter-checkbox input {
-  accent-color: var(--calls311-color);
-}
-
-.filter-checkbox.police .checkbox-label { color: var(--police-color); }
-.filter-checkbox.fire .checkbox-label { color: var(--fire-color); }
-.filter-checkbox.calls311 .checkbox-label { color: var(--calls311-color); }
-.filter-checkbox.cad .checkbox-label { color: var(--cad-color); }
-
-.district-list {
-  max-height: 200px;
-  overflow-y: auto;
-}
-
 /* Footer */
 .app-footer {
   background: var(--bg-secondary);
@@ -376,6 +595,12 @@ body {
 }
 
 /* Responsive */
+@media (max-width: 1200px) {
+  .charts-row.three-col {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 @media (max-width: 1024px) {
   .app-main {
     flex-direction: column;
@@ -387,11 +612,17 @@ body {
     border-bottom: 1px solid var(--border-color);
   }
 
-  .stats-summary {
-    grid-template-columns: repeat(2, 1fr);
+  .header-content {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
   }
 
-  .charts-row {
+  .charts-row, .charts-row.three-col {
+    grid-template-columns: 1fr;
+  }
+
+  .encampment-content {
     grid-template-columns: 1fr;
   }
 }

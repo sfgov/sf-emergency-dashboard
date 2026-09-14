@@ -6,6 +6,7 @@ export interface Incident {
   address: string;
   district: string;
   station?: string;
+  neighborhood?: string;
   latitude: number;
   longitude: number;
   timestamp: Date;
@@ -13,6 +14,9 @@ export interface Incident {
   resolution?: string;
   priority?: string;
   unitType?: string;
+  responder?: 'PD' | 'Fire' | 'EMS' | 'Other';
+  responseTimeMinutes?: number;
+  isEncampment?: boolean;
 }
 
 export interface PoliceIncident {
@@ -122,3 +126,31 @@ export type IncidentFilter = {
   districts: string[];
   timeRange: 'today' | 'week' | 'month';
 };
+
+export interface PriorityStats {
+  priority: string;
+  count: number;
+  avgResponseTime: number;
+}
+
+export interface ResponderStats {
+  responder: string;
+  count: number;
+  avgResponseTime: number;
+}
+
+export interface HourlyStats {
+  hour: number;
+  label: string;
+  total: number;
+  priorityA: number;
+  priorityB: number;
+  priorityC: number;
+}
+
+export interface EncampmentStats {
+  district: string;
+  count: number;
+  openCount: number;
+  closedCount: number;
+}
