@@ -11,7 +11,7 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
   },
-  "homepage": "https://zoya-r-khan.github.io/emergency-response",
+  "homepage": "https://sfgov.github.io/emergency-response",
   "dependencies": {
     "@types/leaflet": "^1.9.22",
     "date-fns": "^4.4.0",
