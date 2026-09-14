@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { IncidentMap, FilterPanel, DistrictChart, StationChart, IncidentList, StatsSummary } from './components';
 import { useIncidents, useFilteredIncidents, useDistrictStats, useStationStats } from './hooks/useIncidents';
-import { IncidentFilter } from './types/incidents';
+import type { IncidentFilter } from './types/incidents';
 import './App.css';
 
 function App() {

@@ -1,4 +1,4 @@
-import { IncidentFilter } from '../types/incidents';
+import type { IncidentFilter } from '../types/incidents';
 
 interface FilterPanelProps {
   filter: IncidentFilter;

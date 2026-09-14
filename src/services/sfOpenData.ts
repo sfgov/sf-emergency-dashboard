@@ -1,4 +1,4 @@
-import { Incident, PoliceIncident, FireCall, Case311, CADCall } from '../types/incidents';
+import type { Incident, PoliceIncident, FireCall, Case311, CADCall } from '../types/incidents';
 import { subDays, format } from 'date-fns';
 
 const SF_DATA_BASE = 'https://data.sfgov.org/resource';

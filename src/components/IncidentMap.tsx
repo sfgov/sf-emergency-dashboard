@@ -1,5 +1,5 @@
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
-import { Incident } from '../types/incidents';
+import type { Incident } from '../types/incidents';
 import { format } from 'date-fns';
 import 'leaflet/dist/leaflet.css';
 

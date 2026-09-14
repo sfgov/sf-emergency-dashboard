@@ -226,7 +226,7 @@ body {
 
 .incident-item.incident-police { border-left-color: var(--police-color); }
 .incident-item.incident-fire { border-left-color: var(--fire-color); }
-.incident-item.incident-311 { border-left-color: var(--calls311-color); }
+.incident-item.incident-calls311 { border-left-color: var(--calls311-color); }
 .incident-item.incident-cad { border-left-color: var(--cad-color); }
 
 .incident-header {
@@ -245,7 +245,7 @@ body {
 
 .incident-badge.police { background: var(--police-color); color: white; }
 .incident-badge.fire { background: var(--fire-color); color: white; }
-.incident-badge.311 { background: var(--calls311-color); color: white; }
+.incident-badge.calls311 { background: var(--calls311-color); color: white; }
 .incident-badge.cad { background: var(--cad-color); color: white; }
 
 .incident-time {

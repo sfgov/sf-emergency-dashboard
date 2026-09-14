@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Incident, IncidentFilter, DistrictStats, StationStats } from '../types/incidents';
+import type { Incident, IncidentFilter, DistrictStats, StationStats } from '../types/incidents';
 import { fetchAllIncidents } from '../services/sfOpenData';
 
 export function useIncidents(timeRange: 'today' | 'week' | 'month' = 'week') {

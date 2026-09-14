@@ -1,8 +1,12 @@
-import { Incident } from '../types/incidents';
+import type { Incident } from '../types/incidents';
 import { format } from 'date-fns';
 
 interface IncidentListProps {
   incidents: Incident[];
+}
+
+function getTypeClass(type: string): string {
+  return type === '311' ? 'calls311' : type;
 }
 
 export function IncidentList({ incidents }: IncidentListProps) {
@@ -11,9 +15,9 @@ export function IncidentList({ incidents }: IncidentListProps) {
       <h3>Recent Incidents ({incidents.length})</h3>
       <div className="incident-items">
         {incidents.slice(0, 50).map(incident => (
-          <div key={incident.id} className={`incident-item incident-${incident.type}`}>
+          <div key={incident.id} className={`incident-item incident-${getTypeClass(incident.type)}`}>
             <div className="incident-header">
-              <span className={`incident-badge ${incident.type}`}>
+              <span className={`incident-badge ${getTypeClass(incident.type)}`}>
                 {incident.type.toUpperCase()}
               </span>
               <span className="incident-time">

@@ -1,5 +1,5 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { DistrictStats } from '../types/incidents';
+import type { DistrictStats } from '../types/incidents';
 
 interface DistrictChartProps {
   stats: DistrictStats[];

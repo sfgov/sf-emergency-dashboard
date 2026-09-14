@@ -1,4 +1,4 @@
-import { Incident } from '../types/incidents';
+import type { Incident } from '../types/incidents';
 
 interface StatsSummaryProps {
   incidents: Incident[];
