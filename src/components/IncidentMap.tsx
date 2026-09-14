@@ -7,10 +7,11 @@ interface IncidentMapProps {
   incidents: Incident[];
 }
 
-const TYPE_COLORS = {
+const TYPE_COLORS: Record<string, string> = {
   police: '#ef4444',
   fire: '#f97316',
   '311': '#3b82f6',
+  cad: '#22c55e',
 };
 
 export function IncidentMap({ incidents }: IncidentMapProps) {

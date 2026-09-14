@@ -1,6 +1,6 @@
 export interface Incident {
   id: string;
-  type: 'police' | 'fire' | '311';
+  type: 'police' | 'fire' | '311' | 'cad';
   category: string;
   description: string;
   address: string;
@@ -10,6 +10,8 @@ export interface Incident {
   timestamp: Date;
   status?: string;
   resolution?: string;
+  priority?: string;
+  unitType?: string;
 }
 
 export interface PoliceIncident {
@@ -58,16 +60,55 @@ export interface Case311 {
   source: string;
 }
 
+export interface CADCall {
+  cad_number: string;
+  unit_id: string;
+  incident_number: string;
+  call_type: string;
+  call_date: string;
+  watch_date: string;
+  received_dttm: string;
+  entry_dttm: string;
+  dispatch_dttm: string;
+  enroute_dttm: string;
+  onscene_dttm: string;
+  transport_dttm: string;
+  hospital_dttm: string;
+  available_dttm: string;
+  address: string;
+  city: string;
+  zipcode_of_incident: string;
+  battalion: string;
+  station_area: string;
+  box: string;
+  original_priority: string;
+  priority: string;
+  final_priority: string;
+  als_unit: string;
+  call_type_group: string;
+  number_of_alarms: string;
+  unit_type: string;
+  unit_sequence_in_call_dispatch: string;
+  fire_prevention_district: string;
+  supervisor_district: string;
+  neighborhood_district: string;
+  rowid: string;
+  latitude: string;
+  longitude: string;
+  point: { coordinates: [number, number] };
+}
+
 export interface DistrictStats {
   district: string;
   totalCalls: number;
   policeIncidents: number;
   fireCalls: number;
   calls311: number;
+  cadCalls: number;
 }
 
 export type IncidentFilter = {
-  types: ('police' | 'fire' | '311')[];
+  types: ('police' | 'fire' | '311' | 'cad')[];
   districts: string[];
   timeRange: 'today' | 'week' | 'month';
 };

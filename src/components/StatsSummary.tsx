@@ -8,6 +8,7 @@ export function StatsSummary({ incidents }: StatsSummaryProps) {
   const policeCalls = incidents.filter(i => i.type === 'police').length;
   const fireCalls = incidents.filter(i => i.type === 'fire').length;
   const calls311 = incidents.filter(i => i.type === '311').length;
+  const cadCalls = incidents.filter(i => i.type === 'cad').length;
 
   return (
     <div className="stats-summary">
@@ -26,6 +27,10 @@ export function StatsSummary({ incidents }: StatsSummaryProps) {
       <div className="stat-card calls311">
         <div className="stat-value">{calls311}</div>
         <div className="stat-label">311 Calls</div>
+      </div>
+      <div className="stat-card cad">
+        <div className="stat-value">{cadCalls}</div>
+        <div className="stat-label">CAD Live</div>
       </div>
     </div>
   );

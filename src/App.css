@@ -6,6 +6,7 @@
   --police-color: #ef4444;
   --fire-color: #f97316;
   --calls311-color: #3b82f6;
+  --cad-color: #22c55e;
   --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
   --bg-card: #334155;
@@ -107,7 +108,7 @@ body {
 /* Stats Summary */
 .stats-summary {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 1rem;
   margin-bottom: 1rem;
 }
@@ -120,10 +121,11 @@ body {
   border-left: 4px solid var(--border-color);
 }
 
-.stat-card.total { border-left-color: #22c55e; }
+.stat-card.total { border-left-color: #a855f7; }
 .stat-card.police { border-left-color: var(--police-color); }
 .stat-card.fire { border-left-color: var(--fire-color); }
 .stat-card.calls311 { border-left-color: var(--calls311-color); }
+.stat-card.cad { border-left-color: var(--cad-color); }
 
 .stat-value {
   font-size: 2rem;
@@ -171,6 +173,7 @@ body {
 .popup-badge-police { background: var(--police-color); color: white; }
 .popup-badge-fire { background: var(--fire-color); color: white; }
 .popup-badge-311 { background: var(--calls311-color); color: white; }
+.popup-badge-cad { background: var(--cad-color); color: white; }
 
 /* Charts Row */
 .charts-row {
@@ -207,6 +210,7 @@ body {
 .incident-item.incident-police { border-left-color: var(--police-color); }
 .incident-item.incident-fire { border-left-color: var(--fire-color); }
 .incident-item.incident-311 { border-left-color: var(--calls311-color); }
+.incident-item.incident-cad { border-left-color: var(--cad-color); }
 
 .incident-header {
   display: flex;
@@ -225,6 +229,7 @@ body {
 .incident-badge.police { background: var(--police-color); color: white; }
 .incident-badge.fire { background: var(--fire-color); color: white; }
 .incident-badge.311 { background: var(--calls311-color); color: white; }
+.incident-badge.cad { background: var(--cad-color); color: white; }
 
 .incident-time {
   font-size: 0.75rem;
@@ -318,6 +323,7 @@ body {
 .filter-checkbox.police .checkbox-label { color: var(--police-color); }
 .filter-checkbox.fire .checkbox-label { color: var(--fire-color); }
 .filter-checkbox.calls311 .checkbox-label { color: var(--calls311-color); }
+.filter-checkbox.cad .checkbox-label { color: var(--cad-color); }
 
 .district-list {
   max-height: 200px;

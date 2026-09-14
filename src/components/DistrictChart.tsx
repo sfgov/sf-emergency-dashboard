@@ -11,6 +11,7 @@ export function DistrictChart({ stats }: DistrictChartProps) {
     Police: s.policeIncidents,
     Fire: s.fireCalls,
     '311': s.calls311,
+    CAD: s.cadCalls,
   }));
 
   return (
@@ -25,6 +26,7 @@ export function DistrictChart({ stats }: DistrictChartProps) {
           <Bar dataKey="Police" stackId="a" fill="#ef4444" />
           <Bar dataKey="Fire" stackId="a" fill="#f97316" />
           <Bar dataKey="311" stackId="a" fill="#3b82f6" />
+          <Bar dataKey="CAD" stackId="a" fill="#22c55e" />
         </BarChart>
       </ResponsiveContainer>
     </div>

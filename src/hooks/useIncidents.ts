@@ -54,12 +54,14 @@ export function useDistrictStats(incidents: Incident[]): DistrictStats[] {
         policeIncidents: 0,
         fireCalls: 0,
         calls311: 0,
+        cadCalls: 0,
       };
 
       existing.totalCalls++;
       if (incident.type === 'police') existing.policeIncidents++;
       else if (incident.type === 'fire') existing.fireCalls++;
       else if (incident.type === '311') existing.calls311++;
+      else if (incident.type === 'cad') existing.cadCalls++;
 
       statsMap.set(district, existing);
     });

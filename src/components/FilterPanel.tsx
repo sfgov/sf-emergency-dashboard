@@ -7,7 +7,7 @@ interface FilterPanelProps {
 }
 
 export function FilterPanel({ filter, onFilterChange, districts }: FilterPanelProps) {
-  const toggleType = (type: 'police' | 'fire' | '311') => {
+  const toggleType = (type: 'police' | 'fire' | '311' | 'cad') => {
     const types = filter.types.includes(type)
       ? filter.types.filter(t => t !== type)
       : [...filter.types, type];
@@ -66,6 +66,14 @@ export function FilterPanel({ filter, onFilterChange, districts }: FilterPanelPr
               onChange={() => toggleType('311')}
             />
             <span className="checkbox-label">311</span>
+          </label>
+          <label className="filter-checkbox cad">
+            <input
+              type="checkbox"
+              checked={filter.types.length === 0 || filter.types.includes('cad')}
+              onChange={() => toggleType('cad')}
+            />
+            <span className="checkbox-label">CAD (Live)</span>
           </label>
         </div>
       </div>
