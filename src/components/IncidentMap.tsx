@@ -7,6 +7,8 @@ interface IncidentMapProps {
   incidents: Incident[];
 }
 
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
+
 const TYPE_COLORS: Record<string, string> = {
   police: '#ef4444',
   fire: '#f97316',
@@ -24,8 +26,8 @@ export function IncidentMap({ incidents }: IncidentMapProps) {
       style={{ height: '100%', width: '100%' }}
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
+        url={`https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`}
       />
       {incidents.map(incident => (
         <CircleMarker
