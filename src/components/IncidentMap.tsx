@@ -10,10 +10,10 @@ interface IncidentMapProps {
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
 const TYPE_COLORS: Record<string, string> = {
-  police: '#ef4444',
-  fire: '#f97316',
-  '311': '#3b82f6',
-  cad: '#22c55e',
+  police: '#2563eb',
+  fire: '#ff9f0a',
+  '311': '#6366f1',
+  cad: '#30d158',
 };
 
 export function IncidentMap({ incidents }: IncidentMapProps) {

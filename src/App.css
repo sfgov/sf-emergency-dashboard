@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600&display=swap');
-
 * {
   box-sizing: border-box;
   margin: 0;
@@ -18,8 +16,8 @@
   --success: #30d158;
   --warning: #ff9f0a;
 
-  --font-mono: 'JetBrains Mono', monospace;
-  --font-body: 'Space Grotesk', sans-serif;
+  --font-body: 'Aptos', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Segoe UI Mono', Consolas, monospace;
 }
 
 body {
