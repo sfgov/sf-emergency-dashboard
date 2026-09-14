@@ -1,7 +1,7 @@
 import type { Incident, PoliceIncident, FireCall, Case311, CADCall } from '../types/incidents';
 import { subDays, format, differenceInMinutes } from 'date-fns';
 
-const SF_DATA_BASE = 'https://data.sfgov.org/resource';
+const SF_DATA_BASE = 'https://data.sf.gov/resource';
 
 const DATASETS = {
   police: 'wg3w-h783',
