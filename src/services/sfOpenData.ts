@@ -55,9 +55,18 @@ function getDateFilter(timeRange: 'today' | 'week' | 'month'): string {
   return format(startDate, "yyyy-MM-dd'T'HH:mm:ss");
 }
 
-export async function fetchPoliceIncidents(timeRange: 'today' | 'week' | 'month' = 'week'): Promise<Incident[]> {
+function buildUrl(dataset: string, dateField: string, timeRange: 'today' | 'week' | 'month'): string {
   const dateFilter = getDateFilter(timeRange);
-  const url = `${SF_DATA_BASE}/${DATASETS.police}.json?$where=incident_datetime > '${dateFilter}'&$limit=1000&$order=incident_datetime DESC`;
+  const params = new URLSearchParams({
+    '$where': `${dateField} > '${dateFilter}'`,
+    '$limit': '1000',
+    '$order': `${dateField} DESC`,
+  });
+  return `${SF_DATA_BASE}/${dataset}.json?${params.toString()}`;
+}
+
+export async function fetchPoliceIncidents(timeRange: 'today' | 'week' | 'month' = 'week'): Promise<Incident[]> {
+  const url = buildUrl(DATASETS.police, 'incident_datetime', timeRange);
 
   const response = await fetch(url);
   if (!response.ok) throw new Error('Failed to fetch police incidents');
@@ -82,8 +91,7 @@ export async function fetchPoliceIncidents(timeRange: 'today' | 'week' | 'month'
 }
 
 export async function fetchFireCalls(timeRange: 'today' | 'week' | 'month' = 'week'): Promise<Incident[]> {
-  const dateFilter = getDateFilter(timeRange);
-  const url = `${SF_DATA_BASE}/${DATASETS.fire}.json?$where=received_dttm > '${dateFilter}'&$limit=1000&$order=received_dttm DESC`;
+  const url = buildUrl(DATASETS.fire, 'received_dttm', timeRange);
 
   const response = await fetch(url);
   if (!response.ok) throw new Error('Failed to fetch fire calls');
@@ -110,8 +118,7 @@ export async function fetchFireCalls(timeRange: 'today' | 'week' | 'month' = 'we
 }
 
 export async function fetch311Cases(timeRange: 'today' | 'week' | 'month' = 'week'): Promise<Incident[]> {
-  const dateFilter = getDateFilter(timeRange);
-  const url = `${SF_DATA_BASE}/${DATASETS.calls311}.json?$where=requested_datetime > '${dateFilter}'&$limit=1000&$order=requested_datetime DESC`;
+  const url = buildUrl(DATASETS.calls311, 'requested_datetime', timeRange);
 
   const response = await fetch(url);
   if (!response.ok) throw new Error('Failed to fetch 311 cases');
@@ -140,8 +147,7 @@ export async function fetch311Cases(timeRange: 'today' | 'week' | 'month' = 'wee
 }
 
 export async function fetchCADCalls(timeRange: 'today' | 'week' | 'month' = 'week'): Promise<Incident[]> {
-  const dateFilter = getDateFilter(timeRange);
-  const url = `${SF_DATA_BASE}/${DATASETS.cad}.json?$where=received_dttm > '${dateFilter}'&$limit=1000&$order=received_dttm DESC`;
+  const url = buildUrl(DATASETS.cad, 'received_dttm', timeRange);
 
   const response = await fetch(url);
   if (!response.ok) throw new Error('Failed to fetch CAD calls');
