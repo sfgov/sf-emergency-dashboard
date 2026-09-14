@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Incident, IncidentFilter, DistrictStats } from '../types/incidents';
+import { Incident, IncidentFilter, DistrictStats, StationStats } from '../types/incidents';
 import { fetchAllIncidents } from '../services/sfOpenData';
 
 export function useIncidents(timeRange: 'today' | 'week' | 'month' = 'week') {
@@ -64,6 +64,42 @@ export function useDistrictStats(incidents: Incident[]): DistrictStats[] {
       else if (incident.type === 'cad') existing.cadCalls++;
 
       statsMap.set(district, existing);
+    });
+
+    return Array.from(statsMap.values()).sort((a, b) => b.totalCalls - a.totalCalls);
+  }, [incidents]);
+}
+
+export function useStationStats(incidents: Incident[]): StationStats[] {
+  return useMemo(() => {
+    const statsMap = new Map<string, StationStats>();
+
+    incidents.forEach(incident => {
+      if (!incident.station) return;
+
+      const station = `Station ${incident.station}`;
+      const existing = statsMap.get(station) || {
+        station,
+        totalCalls: 0,
+        fireCalls: 0,
+        cadCalls: 0,
+        medicalCalls: 0,
+        otherCalls: 0,
+      };
+
+      existing.totalCalls++;
+
+      if (incident.type === 'fire') existing.fireCalls++;
+      else if (incident.type === 'cad') existing.cadCalls++;
+
+      const category = incident.category.toLowerCase();
+      if (category.includes('medical') || category.includes('medic') || category.includes('als') || category.includes('bls')) {
+        existing.medicalCalls++;
+      } else {
+        existing.otherCalls++;
+      }
+
+      statsMap.set(station, existing);
     });
 
     return Array.from(statsMap.values()).sort((a, b) => b.totalCalls - a.totalCalls);

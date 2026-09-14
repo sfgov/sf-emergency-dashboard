@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
-import { IncidentMap, FilterPanel, DistrictChart, IncidentList, StatsSummary } from './components';
-import { useIncidents, useFilteredIncidents, useDistrictStats } from './hooks/useIncidents';
+import { IncidentMap, FilterPanel, DistrictChart, StationChart, IncidentList, StatsSummary } from './components';
+import { useIncidents, useFilteredIncidents, useDistrictStats, useStationStats } from './hooks/useIncidents';
 import { IncidentFilter } from './types/incidents';
 import './App.css';
 
@@ -14,6 +14,7 @@ function App() {
   const { incidents, loading, error, refetch } = useIncidents(filter.timeRange);
   const filteredIncidents = useFilteredIncidents(incidents, filter);
   const districtStats = useDistrictStats(filteredIncidents);
+  const stationStats = useStationStats(filteredIncidents);
 
   const uniqueDistricts = useMemo(() => {
     return [...new Set(incidents.map(i => i.district))].sort();
@@ -61,6 +62,10 @@ function App() {
 
               <div className="charts-row">
                 <DistrictChart stats={districtStats} />
+                <StationChart stats={stationStats} />
+              </div>
+
+              <div className="charts-row">
                 <IncidentList incidents={filteredIncidents} />
               </div>
             </>

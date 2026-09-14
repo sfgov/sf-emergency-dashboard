@@ -182,15 +182,32 @@ body {
   gap: 1rem;
 }
 
-.district-chart, .incident-list {
+.district-chart, .station-chart, .incident-list {
   background: var(--bg-secondary);
   border-radius: 8px;
   padding: 1rem;
 }
 
-.district-chart h3, .incident-list h3 {
-  margin: 0 0 1rem;
+.district-chart h3, .station-chart h3, .incident-list h3 {
+  margin: 0 0 0.5rem;
   font-size: 1rem;
+}
+
+.chart-subtitle {
+  margin: 0 0 1rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.charts-row:last-of-type .incident-list {
+  grid-column: 1 / -1;
+}
+
+.charts-row:last-of-type .incident-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 0.5rem;
+  max-height: 400px;
 }
 
 /* Incident List */

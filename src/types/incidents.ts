@@ -5,6 +5,7 @@ export interface Incident {
   description: string;
   address: string;
   district: string;
+  station?: string;
   latitude: number;
   longitude: number;
   timestamp: Date;
@@ -105,6 +106,15 @@ export interface DistrictStats {
   fireCalls: number;
   calls311: number;
   cadCalls: number;
+}
+
+export interface StationStats {
+  station: string;
+  totalCalls: number;
+  fireCalls: number;
+  cadCalls: number;
+  medicalCalls: number;
+  otherCalls: number;
 }
 
 export type IncidentFilter = {
