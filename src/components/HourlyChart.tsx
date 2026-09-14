@@ -6,6 +6,10 @@ interface HourlyChartProps {
 }
 
 export function HourlyChart({ stats }: HourlyChartProps) {
+  if (!stats || stats.length === 0) {
+    return <div className="hourly-chart"><h3>Hourly</h3><p className="chart-subtitle">No data</p></div>;
+  }
+
   const peakHour = stats.reduce((max, s) => s.total > max.total ? s : max, stats[0]);
 
   return (

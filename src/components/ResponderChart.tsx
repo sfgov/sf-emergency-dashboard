@@ -13,6 +13,10 @@ const RESPONDER_COLORS: Record<string, string> = {
 };
 
 export function ResponderChart({ stats }: ResponderChartProps) {
+  if (!stats || stats.length === 0) {
+    return <div className="responder-chart"><h3>Responders</h3><p className="chart-subtitle">No data</p></div>;
+  }
+
   return (
     <div className="responder-chart">
       <h3>Responders</h3>

@@ -6,6 +6,10 @@ interface StationChartProps {
 }
 
 export function StationChart({ stats }: StationChartProps) {
+  if (!stats || stats.length === 0) {
+    return <div className="station-chart"><h3>Stations</h3><p className="chart-subtitle">No data</p></div>;
+  }
+
   const chartData = stats.slice(0, 12).map(s => ({
     name: s.station,
     Medical: s.medicalCalls,

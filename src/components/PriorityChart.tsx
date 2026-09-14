@@ -13,7 +13,11 @@ const PRIORITY_COLORS: Record<string, string> = {
 };
 
 export function PriorityChart({ stats }: PriorityChartProps) {
-  const total = stats.reduce((sum, s) => sum + s.count, 0);
+  if (!stats || stats.length === 0) {
+    return <div className="priority-chart"><h3>Priority</h3><p className="chart-subtitle">No data</p></div>;
+  }
+
+  const total = stats.reduce((sum, s) => sum + s.count, 0) || 1;
 
   return (
     <div className="priority-chart">
