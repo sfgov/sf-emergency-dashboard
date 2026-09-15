@@ -183,8 +183,13 @@ export function useHourlyStats(incidents: Incident[]): HourlyStats[] {
       priorityC: 0,
     }));
 
+    if (!incidents || incidents.length === 0) return hourly;
+
     incidents.forEach(incident => {
+      if (!incident.timestamp || isNaN(incident.timestamp.getTime())) return;
       const hour = incident.timestamp.getHours();
+      if (hour < 0 || hour > 23) return;
+
       hourly[hour].total++;
 
       const priority = incident.priority?.toUpperCase().charAt(0);

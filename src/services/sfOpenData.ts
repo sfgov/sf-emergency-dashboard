@@ -57,9 +57,10 @@ function getDateFilter(timeRange: 'today' | 'week' | 'month'): string {
 
 function buildUrl(dataset: string, dateField: string, timeRange: 'today' | 'week' | 'month'): string {
   const dateFilter = getDateFilter(timeRange);
+  const limit = timeRange === 'today' ? '2000' : timeRange === 'week' ? '5000' : '10000';
   const params = new URLSearchParams({
     '$where': `${dateField} > '${dateFilter}'`,
-    '$limit': '1000',
+    '$limit': limit,
     '$order': `${dateField} DESC`,
   });
   return `${SF_DATA_BASE}/${dataset}.json?${params.toString()}`;
@@ -188,6 +189,10 @@ export async function fetchCADCalls(timeRange: 'today' | 'week' | 'month' = 'wee
     });
 }
 
+function isValidIncident(incident: Incident): boolean {
+  return incident.timestamp instanceof Date && !isNaN(incident.timestamp.getTime());
+}
+
 export async function fetchAllIncidents(timeRange: 'today' | 'week' | 'month' = 'week'): Promise<Incident[]> {
   const [police, fire, calls311, cad] = await Promise.all([
     fetchPoliceIncidents(timeRange),
@@ -196,7 +201,7 @@ export async function fetchAllIncidents(timeRange: 'today' | 'week' | 'month' = 
     fetchCADCalls(timeRange),
   ]);
 
-  return [...police, ...fire, ...calls311, ...cad].sort(
-    (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
-  );
+  return [...police, ...fire, ...calls311, ...cad]
+    .filter(isValidIncident)
+    .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 }

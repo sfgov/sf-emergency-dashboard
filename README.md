@@ -1,32 +1,59 @@
-# React + TypeScript + Vite
+# SF Emergency Response Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+An analytical dashboard for reviewing San Francisco emergency response data across 911 calls, 311 service requests, and CAD dispatch records.
 
-Currently, two official plugins are available:
+**Live:** https://sfgov.github.io/sf-emergency-dashboard/
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## What It Does
 
-## React Compiler
+- **Priority breakdown**: View call volume by priority level (A = life-threatening, B = urgent, C = non-urgent) with per-day averages
+- **Time of day analysis**: See when calls peak across overnight, morning, afternoon, and evening windows
+- **Encampment tracking**: Filter to 311 tickets related to encampments and homeless concerns
+- **Geographic drill-down**: Start at city level, click into a district, then into a specific station
+- **Call type ranking**: See top 10 call categories for any geography or time range
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Data Sources
 
-## Expanding the Oxlint configuration
+All data comes from [SF OpenData](https://data.sf.gov):
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+| Dataset | Description |
+|---------|-------------|
+| [Police Incidents](https://data.sf.gov/resource/wg3w-h783) | SFPD incident reports |
+| [Fire Calls](https://data.sf.gov/resource/nuek-vuh3) | SFFD calls for service |
+| [311 Cases](https://data.sf.gov/resource/vw6y-z8j6) | 311 service requests |
+| [CAD Dispatch](https://data.sf.gov/resource/enhu-st7v) | Computer-aided dispatch records |
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+## Priority Codes
+
+SF Fire/EMS uses numeric priority codes:
+
+- **Priority 3 / E**: Life-threatening emergency (mapped to "A")
+- **Priority 2**: Urgent, non-life-threatening (mapped to "B")
+- **Priority 1**: Non-urgent (mapped to "C")
+
+## Development
+
+```bash
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Requires a Mapbox token in `.env.local`:
+```
+VITE_MAPBOX_TOKEN=your_token_here
+```
+
+## Deployment
+
+```bash
+npm run deploy
+```
+
+Deploys to GitHub Pages via `gh-pages` package.
+
+## Tech Stack
+
+- React + TypeScript + Vite
+- Leaflet / react-leaflet for maps
+- Mapbox dark tiles
+- Lucide icons
