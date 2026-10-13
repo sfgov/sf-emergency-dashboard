@@ -9,3 +9,4 @@ export { ResponderChart } from './ResponderChart';
 export { HourlyChart } from './HourlyChart';
 export { EncampmentTracker } from './EncampmentTracker';
 export { DistrictPriorityTable } from './DistrictPriorityTable';
+export { StaffingSimulator } from './StaffingSimulator';
