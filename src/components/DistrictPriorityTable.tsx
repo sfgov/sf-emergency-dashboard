@@ -1,10 +1,19 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import type { Incident, DistrictPriorityMonthlyStats } from '../types/incidents';
 
 interface DistrictPriorityTableProps {
   incidents: Incident[];
 }
+
+type PriorityFilter = 'all' | 'A' | 'B' | 'C';
+type ViewMode = 'total' | 'officer-initiated';
+
+const PRIORITY_LABELS: Record<string, string> = {
+  A: 'A · immediate danger',
+  B: 'B · recent crime',
+  C: 'C · no present danger',
+};
 
 const OFFICER_INITIATED_PATTERNS = [
   'officer initiated',
@@ -37,10 +46,14 @@ function getPoliceDistrict(incident: Incident): string | null {
 }
 
 export function DistrictPriorityTable({ incidents }: DistrictPriorityTableProps) {
-  const { monthlyStats, months, districts } = useMemo(() => {
+  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all');
+  const [viewMode, setViewMode] = useState<ViewMode>('total');
+
+  const { monthlyStats, months, districts, citywideTotals } = useMemo(() => {
     const statsMap = new Map<string, DistrictPriorityMonthlyStats>();
     const monthSet = new Set<string>();
     const districtSet = new Set<string>();
+    const citywide: Record<string, { total: number; oi: number; priorityA: number; priorityB: number; priorityC: number }> = {};
 
     incidents.forEach(incident => {
       const district = getPoliceDistrict(incident);
@@ -55,6 +68,10 @@ export function DistrictPriorityTable({ incidents }: DistrictPriorityTableProps)
       monthSet.add(month);
       districtSet.add(district);
 
+      if (!citywide[month]) {
+        citywide[month] = { total: 0, oi: 0, priorityA: 0, priorityB: 0, priorityC: 0 };
+      }
+
       const existing = statsMap.get(key) || {
         district,
         month,
@@ -68,16 +85,21 @@ export function DistrictPriorityTable({ incidents }: DistrictPriorityTableProps)
       };
 
       existing.total++;
+      citywide[month].total++;
       const oi = isOfficerInitiated(incident);
+      if (oi) citywide[month].oi++;
 
       if (priorityBucket === 'A') {
         existing.priorityA++;
+        citywide[month].priorityA++;
         if (oi) existing.officerInitiatedA++;
       } else if (priorityBucket === 'B') {
         existing.priorityB++;
+        citywide[month].priorityB++;
         if (oi) existing.officerInitiatedB++;
       } else {
         existing.priorityC++;
+        citywide[month].priorityC++;
         if (oi) existing.officerInitiatedC++;
       }
 
@@ -91,75 +113,202 @@ export function DistrictPriorityTable({ incidents }: DistrictPriorityTableProps)
       monthlyStats: statsMap,
       months: sortedMonths,
       districts: sortedDistricts,
+      citywideTotals: citywide,
     };
   }, [incidents]);
 
+  const getCellValue = (stats: DistrictPriorityMonthlyStats | undefined, priority: PriorityFilter): number => {
+    if (!stats) return 0;
+    if (viewMode === 'officer-initiated') {
+      if (priority === 'A') return stats.officerInitiatedA;
+      if (priority === 'B') return stats.officerInitiatedB;
+      if (priority === 'C') return stats.officerInitiatedC;
+      return stats.officerInitiatedA + stats.officerInitiatedB + stats.officerInitiatedC;
+    }
+    if (priority === 'A') return stats.priorityA;
+    if (priority === 'B') return stats.priorityB;
+    if (priority === 'C') return stats.priorityC;
+    return stats.total;
+  };
+
+  const getCitywideValue = (month: string, priority: PriorityFilter): number => {
+    const cw = citywideTotals[month];
+    if (!cw) return 0;
+    if (priority === 'A') return cw.priorityA;
+    if (priority === 'B') return cw.priorityB;
+    if (priority === 'C') return cw.priorityC;
+    return cw.total;
+  };
+
+  const getDeviation = (districtVal: number, citywideVal: number, districtCount: number): string => {
+    if (districtCount === 0 || citywideVal === 0) return '-';
+    const avgPerDistrict = citywideVal / districts.length;
+    const diff = ((districtVal - avgPerDistrict) / avgPerDistrict) * 100;
+    if (Math.abs(diff) < 1) return '0%';
+    return diff > 0 ? `+${Math.round(diff)}%` : `${Math.round(diff)}%`;
+  };
+
   if (months.length === 0 || districts.length === 0) {
     return (
-      <div className="district-priority-table">
-        <h3>District Priority Breakdown</h3>
-        <p className="no-data">No priority data available</p>
+      <div className="district-priority-section">
+        <h2>Priority calls by district</h2>
+        <p className="section-subtitle">No priority data available for the selected time range</p>
       </div>
     );
   }
 
   return (
-    <div className="district-priority-table">
-      <h3>Priority Calls by District (Month over Month)</h3>
-      <div className="table-wrapper">
-        <table>
+    <div className="district-priority-section">
+      <header className="section-header">
+        <div>
+          <h2>Priority calls by district</h2>
+          <p className="section-subtitle">
+            Month-over-month breakdown of calls by police district.
+            Officer-initiated calls include traffic stops, foot patrols, and proactive enforcement.
+          </p>
+        </div>
+      </header>
+
+      <div className="filter-row">
+        <div className="filter-group">
+          <span className="filter-label">Priority</span>
+          <div className="filter-options">
+            <label className={priorityFilter === 'all' ? 'active' : ''}>
+              <input
+                type="radio"
+                name="priority"
+                checked={priorityFilter === 'all'}
+                onChange={() => setPriorityFilter('all')}
+              />
+              All
+            </label>
+            <label className={priorityFilter === 'A' ? 'active priority-a' : ''}>
+              <input
+                type="radio"
+                name="priority"
+                checked={priorityFilter === 'A'}
+                onChange={() => setPriorityFilter('A')}
+              />
+              {PRIORITY_LABELS.A}
+            </label>
+            <label className={priorityFilter === 'B' ? 'active priority-b' : ''}>
+              <input
+                type="radio"
+                name="priority"
+                checked={priorityFilter === 'B'}
+                onChange={() => setPriorityFilter('B')}
+              />
+              {PRIORITY_LABELS.B}
+            </label>
+            <label className={priorityFilter === 'C' ? 'active priority-c' : ''}>
+              <input
+                type="radio"
+                name="priority"
+                checked={priorityFilter === 'C'}
+                onChange={() => setPriorityFilter('C')}
+              />
+              {PRIORITY_LABELS.C}
+            </label>
+          </div>
+        </div>
+
+        <div className="filter-group">
+          <span className="filter-label">View</span>
+          <div className="filter-options">
+            <label className={viewMode === 'total' ? 'active' : ''}>
+              <input
+                type="radio"
+                name="view"
+                checked={viewMode === 'total'}
+                onChange={() => setViewMode('total')}
+              />
+              All calls
+            </label>
+            <label className={viewMode === 'officer-initiated' ? 'active' : ''}>
+              <input
+                type="radio"
+                name="view"
+                checked={viewMode === 'officer-initiated'}
+                onChange={() => setViewMode('officer-initiated')}
+              />
+              Officer-initiated only
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div className="table-container">
+        <table className="data-table">
           <thead>
             <tr>
-              <th rowSpan={2}>District</th>
+              <th className="col-district">District</th>
               {months.map(month => (
-                <th key={month} colSpan={6}>
+                <th key={month} className="col-month">
                   {format(new Date(month + '-01'), 'MMM yyyy')}
                 </th>
               ))}
-            </tr>
-            <tr>
-              {months.map(month => (
-                <Fragment key={month}>
-                  <th className="priority-a">A</th>
-                  <th className="priority-a-oi">OI</th>
-                  <th className="priority-b">B</th>
-                  <th className="priority-b-oi">OI</th>
-                  <th className="priority-c">C</th>
-                  <th className="priority-c-oi">OI</th>
-                </Fragment>
-              ))}
+              <th className="col-deviation">vs. Citywide</th>
             </tr>
           </thead>
           <tbody>
-            {districts.map(district => (
-              <tr key={district}>
-                <td className="district-name">{district}</td>
-                {months.map(month => {
-                  const stats = monthlyStats.get(`${district}|${month}`);
-                  return (
-                    <Fragment key={month}>
-                      <td className="priority-a">{stats?.priorityA || 0}</td>
-                      <td className="priority-a-oi">{stats?.officerInitiatedA || 0}</td>
-                      <td className="priority-b">{stats?.priorityB || 0}</td>
-                      <td className="priority-b-oi">{stats?.officerInitiatedB || 0}</td>
-                      <td className="priority-c">{stats?.priorityC || 0}</td>
-                      <td className="priority-c-oi">{stats?.officerInitiatedC || 0}</td>
-                    </Fragment>
-                  );
-                })}
-              </tr>
-            ))}
+            {districts.map(district => {
+              const latestMonth = months[0];
+              const latestStats = monthlyStats.get(`${district}|${latestMonth}`);
+              const districtVal = getCellValue(latestStats, priorityFilter);
+              const citywideVal = getCitywideValue(latestMonth, priorityFilter);
+              const deviation = getDeviation(districtVal, citywideVal, districts.length);
+
+              return (
+                <tr key={district}>
+                  <td className="col-district">{district}</td>
+                  {months.map(month => {
+                    const stats = monthlyStats.get(`${district}|${month}`);
+                    const value = getCellValue(stats, priorityFilter);
+                    return (
+                      <td key={month} className="col-month">
+                        {value > 0 ? value.toLocaleString() : '-'}
+                      </td>
+                    );
+                  })}
+                  <td className={`col-deviation ${deviation.startsWith('+') ? 'above' : deviation.startsWith('-') ? 'below' : ''}`}>
+                    {deviation}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
+          <tfoot>
+            <tr>
+              <td className="col-district">Citywide</td>
+              {months.map(month => {
+                const cw = citywideTotals[month];
+                let value = 0;
+                if (cw) {
+                  if (priorityFilter === 'A') value = cw.priorityA;
+                  else if (priorityFilter === 'B') value = cw.priorityB;
+                  else if (priorityFilter === 'C') value = cw.priorityC;
+                  else value = cw.total;
+                }
+                return (
+                  <td key={month} className="col-month">
+                    {value > 0 ? value.toLocaleString() : '-'}
+                  </td>
+                );
+              })}
+              <td className="col-deviation">-</td>
+            </tr>
+          </tfoot>
         </table>
       </div>
-      <div className="table-legend">
-        <span><strong>A</strong> = Priority A (Critical)</span>
-        <span><strong>B</strong> = Priority B (Urgent)</span>
-        <span><strong>C</strong> = Priority C (Non-urgent)</span>
-        <span><strong>OI</strong> = Officer Initiated</span>
-      </div>
+
+      <footer className="section-footer">
+        <p>
+          <strong>Method:</strong> Calls are categorized by priority at dispatch.
+          Officer-initiated calls are identified by call type descriptions containing
+          patterns like "officer initiated," "traffic stop," or "foot patrol."
+          Deviation compares each district's call volume to the citywide average per district.
+        </p>
+      </footer>
     </div>
   );
 }
-
-const Fragment = ({ children }: { children: React.ReactNode }) => <>{children}</>;

@@ -553,157 +553,196 @@ body {
   }
 }
 
-/* District Priority Table */
-.district-priority-table {
+/* District Priority Section - sfresponse.org inspired */
+.district-priority-section {
   background: var(--bg-surface);
   border: 1px solid var(--border);
-  padding: 14px 16px;
-}
-
-.district-priority-table h3 {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
-  margin-bottom: 12px;
-}
-
-.district-priority-table .no-data {
-  font-size: 12px;
-  color: var(--text-muted);
-  text-align: center;
   padding: 20px;
 }
 
-.district-priority-table .table-wrapper {
-  overflow-x: auto;
-  margin: 0 -8px;
-  padding: 0 8px;
+.district-priority-section .section-header {
+  margin-bottom: 16px;
 }
 
-.district-priority-table table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 11px;
-  min-width: 600px;
+.district-priority-section h2 {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 6px 0;
 }
 
-.district-priority-table th,
-.district-priority-table td {
-  padding: 6px 8px;
-  text-align: center;
+.district-priority-section .section-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Filter Controls */
+.district-priority-section .filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
   border-bottom: 1px solid var(--border);
 }
 
-.district-priority-table th {
-  background: var(--bg);
+.district-priority-section .filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.district-priority-section .filter-label {
   font-family: var(--font-mono);
+  font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.05em;
   color: var(--text-muted);
-  font-size: 10px;
 }
 
-.district-priority-table th[colspan] {
+.district-priority-section .filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.district-priority-section .filter-options label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.district-priority-section .filter-options label:hover {
+  border-color: var(--text-muted);
+}
+
+.district-priority-section .filter-options label.active {
+  background: var(--bg-elevated);
+  border-color: var(--text);
+  color: var(--text);
+}
+
+.district-priority-section .filter-options label.priority-a {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.district-priority-section .filter-options label.priority-b {
+  border-color: var(--warning);
+  color: var(--warning);
+}
+
+.district-priority-section .filter-options label.priority-c {
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.district-priority-section .filter-options input[type="radio"] {
+  display: none;
+}
+
+/* Data Table */
+.district-priority-section .table-container {
+  overflow-x: auto;
+  margin: 0 -12px;
+  padding: 0 12px;
+}
+
+.district-priority-section .data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 500px;
+}
+
+.district-priority-section .data-table th,
+.district-priority-section .data-table td {
+  padding: 10px 12px;
+  text-align: right;
   border-bottom: 1px solid var(--border);
-  border-left: 1px solid var(--border);
 }
 
-.district-priority-table th[colspan]:first-child {
-  border-left: none;
+.district-priority-section .data-table th {
+  font-family: var(--font-body);
+  font-weight: 500;
+  color: var(--text-muted);
+  font-size: 12px;
+  background: transparent;
 }
 
-.district-priority-table td.district-name {
+.district-priority-section .data-table .col-district {
   text-align: left;
   font-weight: 500;
   white-space: nowrap;
-  background: var(--bg);
   position: sticky;
   left: 0;
+  background: var(--bg-surface);
 }
 
-.district-priority-table th.priority-a,
-.district-priority-table td.priority-a {
+.district-priority-section .data-table thead .col-district {
+  background: var(--bg-surface);
+}
+
+.district-priority-section .data-table .col-month {
+  font-variant-numeric: tabular-nums;
+}
+
+.district-priority-section .data-table .col-deviation {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  min-width: 80px;
+}
+
+.district-priority-section .data-table .col-deviation.above {
   color: var(--accent);
-  background: rgba(255, 59, 48, 0.08);
 }
 
-.district-priority-table th.priority-a-oi,
-.district-priority-table td.priority-a-oi {
-  color: var(--accent);
-  background: rgba(255, 59, 48, 0.04);
-  font-style: italic;
-}
-
-.district-priority-table th.priority-b,
-.district-priority-table td.priority-b {
-  color: var(--warning);
-  background: rgba(255, 159, 10, 0.08);
-}
-
-.district-priority-table th.priority-b-oi,
-.district-priority-table td.priority-b-oi {
-  color: var(--warning);
-  background: rgba(255, 159, 10, 0.04);
-  font-style: italic;
-}
-
-.district-priority-table th.priority-c,
-.district-priority-table td.priority-c {
+.district-priority-section .data-table .col-deviation.below {
   color: var(--success);
-  background: rgba(48, 209, 88, 0.08);
 }
 
-.district-priority-table th.priority-c-oi,
-.district-priority-table td.priority-c-oi {
-  color: var(--success);
-  background: rgba(48, 209, 88, 0.04);
-  font-style: italic;
+.district-priority-section .data-table tbody tr:hover {
+  background: var(--bg);
 }
 
-.district-priority-table tbody tr:hover td {
-  background: var(--bg-elevated);
+.district-priority-section .data-table tbody tr:hover .col-district {
+  background: var(--bg);
 }
 
-.district-priority-table tbody tr:hover td.priority-a {
-  background: rgba(255, 59, 48, 0.15);
+.district-priority-section .data-table tfoot {
+  border-top: 2px solid var(--border);
 }
 
-.district-priority-table tbody tr:hover td.priority-a-oi {
-  background: rgba(255, 59, 48, 0.1);
-}
-
-.district-priority-table tbody tr:hover td.priority-b {
-  background: rgba(255, 159, 10, 0.15);
-}
-
-.district-priority-table tbody tr:hover td.priority-b-oi {
-  background: rgba(255, 159, 10, 0.1);
-}
-
-.district-priority-table tbody tr:hover td.priority-c {
-  background: rgba(48, 209, 88, 0.15);
-}
-
-.district-priority-table tbody tr:hover td.priority-c-oi {
-  background: rgba(48, 209, 88, 0.1);
-}
-
-.district-priority-table .table-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-top: 12px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border);
-  font-size: 10px;
-  color: var(--text-muted);
-}
-
-.district-priority-table .table-legend strong {
+.district-priority-section .data-table tfoot td {
   font-weight: 600;
+  color: var(--text);
+}
+
+/* Footer / Method */
+.district-priority-section .section-footer {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.district-priority-section .section-footer p {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.district-priority-section .section-footer strong {
   color: var(--text);
 }
