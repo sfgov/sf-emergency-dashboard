@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
 import { useIncidents } from './hooks/useIncidents';
+import { DistrictPriorityTable } from './components/DistrictPriorityTable';
 import { ChevronRight, ChevronLeft, Calendar, MapPin, AlertTriangle, Building2 } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import './App.css';
@@ -434,6 +435,8 @@ function App() {
               </div>
             </div>
           )}
+
+          <DistrictPriorityTable incidents={incidents} />
 
           <div className="total-footer">
             Total: {stats.total.toLocaleString()} incidents ({stats.perDay.total}/day)

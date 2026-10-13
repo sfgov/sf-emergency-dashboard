@@ -154,3 +154,15 @@ export interface EncampmentStats {
   openCount: number;
   closedCount: number;
 }
+
+export interface DistrictPriorityMonthlyStats {
+  district: string;
+  month: string;
+  priorityA: number;
+  priorityB: number;
+  priorityC: number;
+  officerInitiatedA: number;
+  officerInitiatedB: number;
+  officerInitiatedC: number;
+  total: number;
+}
