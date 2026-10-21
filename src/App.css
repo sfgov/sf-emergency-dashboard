@@ -359,6 +359,19 @@ button:focus-visible, select:focus-visible {
   opacity: 0.5;
 }
 
+.district-row.subtotal {
+  border-top: 2px solid var(--border);
+  margin-top: 8px;
+  padding-top: 12px;
+  font-weight: 600;
+}
+
+.section-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 8px 0;
+}
+
 .bar-track {
   display: flex;
   align-items: center;

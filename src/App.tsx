@@ -9,24 +9,34 @@ const CITYWIDE = {
   airport: 134,
   recruits: 84,
   stationPatrol: 982,
+  fieldOps: 22,
+  dmacc: 81,
   get cityOfficers() { return this.totalSworn - this.airport; },
   get effective() { return this.cityOfficers - this.recruits; },
   get shortage() { return this.target - this.effective; },
-  get otherAssignments() { return this.effective - this.stationPatrol; },
+  get patrolTotal() { return this.stationPatrol + this.fieldOps + this.dmacc; },
+  get otherAssignments() { return this.effective - this.patrolTotal; },
 };
 
-const DISTRICTS = [
-  { id: 'central', name: 'Central', lt: 5, sgt: 14, off: 86, staff: 105, f: [0.30, 0.40, 0.30] },
-  { id: 'southern', name: 'Southern', lt: 5, sgt: 17, off: 113, staff: 135, f: [0.30, 0.42, 0.28] },
-  { id: 'bayview', name: 'Bayview', lt: 3, sgt: 12, off: 83, staff: 98, f: [0.31, 0.38, 0.31] },
-  { id: 'mission', name: 'Mission', lt: 5, sgt: 15, off: 104, staff: 124, f: [0.29, 0.41, 0.30] },
-  { id: 'northern', name: 'Northern', lt: 3, sgt: 14, off: 87, staff: 104, f: [0.30, 0.40, 0.30] },
-  { id: 'park', name: 'Park', lt: 3, sgt: 10, off: 51, staff: 64, f: [0.34, 0.38, 0.28] },
-  { id: 'richmond', name: 'Richmond', lt: 4, sgt: 12, off: 53, staff: 69, f: [0.34, 0.38, 0.28] },
-  { id: 'ingleside', name: 'Ingleside', lt: 3, sgt: 14, off: 75, staff: 92, f: [0.32, 0.38, 0.30] },
-  { id: 'taraval', name: 'Taraval', lt: 4, sgt: 13, off: 62, staff: 79, f: [0.33, 0.38, 0.29] },
-  { id: 'tenderloin', name: 'Tenderloin', lt: 4, sgt: 14, off: 94, staff: 112, f: [0.28, 0.40, 0.32] },
+const STATIONS = [
+  { id: 'central', name: 'Central', capt: 0, lt: 5, sgt: 14, off: 86, staff: 105 },
+  { id: 'southern', name: 'Southern', capt: 0, lt: 5, sgt: 17, off: 113, staff: 135 },
+  { id: 'bayview', name: 'Bayview', capt: 0, lt: 3, sgt: 12, off: 83, staff: 98 },
+  { id: 'mission', name: 'Mission', capt: 0, lt: 5, sgt: 15, off: 104, staff: 124 },
+  { id: 'northern', name: 'Northern', capt: 0, lt: 3, sgt: 14, off: 87, staff: 104 },
+  { id: 'park', name: 'Park', capt: 0, lt: 3, sgt: 10, off: 51, staff: 64 },
+  { id: 'richmond', name: 'Richmond', capt: 0, lt: 4, sgt: 12, off: 53, staff: 69 },
+  { id: 'ingleside', name: 'Ingleside', capt: 0, lt: 3, sgt: 14, off: 75, staff: 92 },
+  { id: 'taraval', name: 'Taraval', capt: 0, lt: 4, sgt: 13, off: 62, staff: 79 },
+  { id: 'tenderloin', name: 'Tenderloin', capt: 0, lt: 4, sgt: 14, off: 94, staff: 112 },
 ];
+
+const OTHER_UNITS = [
+  { id: 'field-ops', name: 'Field Operations', capt: 3, lt: 4, sgt: 5, off: 10, staff: 22 },
+  { id: 'dmacc', name: 'DMACC', capt: 1, lt: 2, sgt: 14, off: 64, staff: 81 },
+];
+
+const DISTRICTS = STATIONS;
 
 const SHIFTS = [
   { label: 'Day', range: '6a–2p', col: '#2a78d6', hours: [6,7,8,9,10,11,12,13] },
@@ -37,12 +47,6 @@ const SHIFTS = [
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const shiftOf = (h: number) => (h >= 6 && h < 14 ? 0 : h >= 14 && h < 22 ? 1 : 2);
 const hourName = (h: number) => { const s = h < 12 ? 'a' : 'p'; const n = h % 12 === 0 ? 12 : h % 12; return n + s; };
-
-const splitShift = (total: number, f: number[]) => {
-  const a = Math.round(total * f[0]);
-  const b = Math.round(total * f[1]);
-  return [a, b, total - a - b];
-};
 
 const fmt = (n: number) => Math.round(n).toLocaleString('en-US');
 
@@ -135,8 +139,8 @@ function App() {
 
       let dutyTotal = 0;
       scope.forEach(d => {
-        const assigned = splitShift(d.staff, d.f);
-        dutyTotal += Math.round(assigned[s] * 0.72);
+        const perShift = Math.round(d.staff / 3);
+        dutyTotal += Math.round(perShift * 0.72);
       });
 
       const calls = hourlyCallData[h];
@@ -322,6 +326,56 @@ function App() {
                 <span className="col-total">{row.staff}</span>
               </button>
             ))}
+            <div className="district-row subtotal">
+              <span className="col-name">Station Total</span>
+              <span className="col-bar" />
+              <span className="col-rank">39</span>
+              <span className="col-rank">135</span>
+              <span className="col-rank">808</span>
+              <span className="col-total">{fmt(CITYWIDE.stationPatrol)}</span>
+            </div>
+          </div>
+
+          <div className="section-divider" />
+
+          <div className="card-header">
+            <h2>Other patrol units</h2>
+          </div>
+
+          <div className="district-table">
+            <div className="district-header">
+              <span className="col-name" />
+              <span className="col-bar" />
+              <span className="col-rank">Capt</span>
+              <span className="col-rank">Lt</span>
+              <span className="col-rank">Sgt</span>
+              <span className="col-rank">Off</span>
+              <span className="col-total">Total</span>
+            </div>
+            {OTHER_UNITS.map(unit => (
+              <div key={unit.id} className="district-row">
+                <span className="col-name">{unit.name}</span>
+                <span className="col-bar">
+                  <span className="bar-track">
+                    <span className="bar-segment" style={{ width: `${(unit.staff / 135) * 100}%`, background: '#6f6e68' }} />
+                  </span>
+                </span>
+                <span className="col-rank">{unit.capt}</span>
+                <span className="col-rank">{unit.lt}</span>
+                <span className="col-rank">{unit.sgt}</span>
+                <span className="col-rank">{unit.off}</span>
+                <span className="col-total">{unit.staff}</span>
+              </div>
+            ))}
+            <div className="district-row subtotal">
+              <span className="col-name">Patrol Total</span>
+              <span className="col-bar" />
+              <span className="col-rank">4</span>
+              <span className="col-rank">45</span>
+              <span className="col-rank">154</span>
+              <span className="col-rank">882</span>
+              <span className="col-total">{fmt(CITYWIDE.patrolTotal)}</span>
+            </div>
           </div>
         </section>
 
