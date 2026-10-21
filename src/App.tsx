@@ -11,10 +11,12 @@ const CITYWIDE = {
   stationPatrol: 982,
   fieldOps: 22,
   dmacc: 81,
+  partialDuty: 18,
   get cityOfficers() { return this.totalSworn - this.airport; },
   get effective() { return this.cityOfficers - this.recruits; },
   get shortage() { return this.target - this.effective; },
   get patrolTotal() { return this.stationPatrol + this.fieldOps + this.dmacc; },
+  get fullDutyPatrol() { return this.patrolTotal - this.partialDuty; },
   get otherAssignments() { return this.effective - this.patrolTotal; },
 };
 
@@ -35,6 +37,19 @@ const OTHER_UNITS = [
   { id: 'field-ops', name: 'Field Operations', capt: 3, lt: 4, sgt: 5, off: 10, staff: 22 },
   { id: 'dmacc', name: 'DMACC', capt: 1, lt: 2, sgt: 14, off: 64, staff: 81 },
 ];
+
+const PARTIAL_DUTY = [
+  { location: 'Northern', count: 4 },
+  { location: 'Field Ops B', count: 5 },
+  { location: 'Park', count: 2 },
+  { location: 'Central', count: 2 },
+  { location: 'Port', count: 1 },
+  { location: 'Taraval', count: 1 },
+  { location: 'Southern', count: 1 },
+  { location: 'Mission', count: 1 },
+  { location: 'DMACC', count: 1 },
+];
+const PARTIAL_DUTY_TOTAL = PARTIAL_DUTY.reduce((sum, p) => sum + p.count, 0);
 
 const DISTRICTS = STATIONS;
 
@@ -375,6 +390,26 @@ function App() {
               <span className="col-rank">154</span>
               <span className="col-rank">882</span>
               <span className="col-total">{fmt(CITYWIDE.patrolTotal)}</span>
+            </div>
+          </div>
+
+          <div className="section-divider" />
+
+          <div className="card-header">
+            <h2>Partial / modified duty</h2>
+            <p>Officers on temporary modified duty assignments. These are included in station totals above.</p>
+          </div>
+
+          <div className="partial-duty-grid">
+            {PARTIAL_DUTY.map(p => (
+              <div key={p.location} className="partial-duty-item">
+                <span className="partial-location">{p.location}</span>
+                <span className="partial-count">{p.count}</span>
+              </div>
+            ))}
+            <div className="partial-duty-item total">
+              <span className="partial-location">Total</span>
+              <span className="partial-count">{PARTIAL_DUTY_TOTAL}</span>
             </div>
           </div>
         </section>

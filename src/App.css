@@ -372,6 +372,39 @@ button:focus-visible, select:focus-visible {
   margin: 8px 0;
 }
 
+.partial-duty-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.partial-duty-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-page);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+
+.partial-duty-item.total {
+  background: var(--bg-inverted);
+  color: var(--text-inverted);
+}
+
+.partial-location {
+  color: var(--text-secondary);
+}
+
+.partial-duty-item.total .partial-location {
+  color: var(--text-inverted-muted);
+}
+
+.partial-count {
+  font-weight: 700;
+}
+
 .bar-track {
   display: flex;
   align-items: center;
