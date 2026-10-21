@@ -8,22 +8,24 @@ const CITYWIDE = {
   totalSworn: 1934,
   airport: 134,
   recruits: 84,
+  stationPatrol: 982,
   get cityOfficers() { return this.totalSworn - this.airport; },
   get effective() { return this.cityOfficers - this.recruits; },
   get shortage() { return this.target - this.effective; },
+  get otherAssignments() { return this.effective - this.stationPatrol; },
 };
 
 const DISTRICTS = [
-  { id: 'central', name: 'Central', staff: 156, auth: 205, f: [0.30, 0.40, 0.30] },
-  { id: 'southern', name: 'Southern', staff: 188, auth: 248, f: [0.30, 0.42, 0.28] },
-  { id: 'bayview', name: 'Bayview', staff: 166, auth: 219, f: [0.31, 0.38, 0.31] },
-  { id: 'mission', name: 'Mission', staff: 179, auth: 236, f: [0.29, 0.41, 0.30] },
-  { id: 'northern', name: 'Northern', staff: 175, auth: 231, f: [0.30, 0.40, 0.30] },
-  { id: 'park', name: 'Park', staff: 112, auth: 147, f: [0.34, 0.38, 0.28] },
-  { id: 'richmond', name: 'Richmond', staff: 108, auth: 143, f: [0.34, 0.38, 0.28] },
-  { id: 'ingleside', name: 'Ingleside', staff: 134, auth: 176, f: [0.32, 0.38, 0.30] },
-  { id: 'taraval', name: 'Taraval', staff: 115, auth: 151, f: [0.33, 0.38, 0.29] },
-  { id: 'tenderloin', name: 'Tenderloin', staff: 183, auth: 241, f: [0.28, 0.40, 0.32] },
+  { id: 'central', name: 'Central', lt: 5, sgt: 14, off: 86, staff: 105, f: [0.30, 0.40, 0.30] },
+  { id: 'southern', name: 'Southern', lt: 5, sgt: 17, off: 113, staff: 135, f: [0.30, 0.42, 0.28] },
+  { id: 'bayview', name: 'Bayview', lt: 3, sgt: 12, off: 83, staff: 98, f: [0.31, 0.38, 0.31] },
+  { id: 'mission', name: 'Mission', lt: 5, sgt: 15, off: 104, staff: 124, f: [0.29, 0.41, 0.30] },
+  { id: 'northern', name: 'Northern', lt: 3, sgt: 14, off: 87, staff: 104, f: [0.30, 0.40, 0.30] },
+  { id: 'park', name: 'Park', lt: 3, sgt: 10, off: 51, staff: 64, f: [0.34, 0.38, 0.28] },
+  { id: 'richmond', name: 'Richmond', lt: 4, sgt: 12, off: 53, staff: 69, f: [0.34, 0.38, 0.28] },
+  { id: 'ingleside', name: 'Ingleside', lt: 3, sgt: 14, off: 75, staff: 92, f: [0.32, 0.38, 0.30] },
+  { id: 'taraval', name: 'Taraval', lt: 4, sgt: 13, off: 62, staff: 79, f: [0.33, 0.38, 0.29] },
+  { id: 'tenderloin', name: 'Tenderloin', lt: 4, sgt: 14, off: 94, staff: 112, f: [0.28, 0.40, 0.32] },
 ];
 
 const SHIFTS = [
@@ -89,63 +91,39 @@ function App() {
   }, [incidents, activeDistricts, activeShifts]);
 
   const kpis = useMemo(() => {
-    const scope = DISTRICTS.filter(d => activeDistricts.includes(d.id));
-    let authTotal = 0;
-    let staffTotal = 0;
-
-    scope.forEach(d => {
-      const assigned = splitShift(d.staff, d.f);
-      const authorized = splitShift(d.auth, d.f);
-      activeShifts.forEach(s => {
-        authTotal += authorized[s];
-        staffTotal += assigned[s];
-      });
-    });
-
-    const shortage = authTotal - staffTotal;
-    const fillPct = authTotal > 0 ? Math.round((staffTotal / authTotal) * 100) : 0;
     const totalCalls = hourlyCallData.reduce((a, b) => a + b, 0);
     const days = timeRange === 'week' ? 7 : timeRange === 'month' ? 30 : timeRange === '3months' ? 90 : 365;
     const callsPerDay = Math.round(totalCalls / days);
 
-    return { authTotal, staffTotal, shortage, fillPct, totalCalls, callsPerDay };
-  }, [activeDistricts, activeShifts, hourlyCallData, timeRange]);
+    return { totalCalls, callsPerDay };
+  }, [hourlyCallData, timeRange]);
 
   const districtRows = useMemo(() => {
-    const maxAuth = Math.max(...DISTRICTS.map(d => {
-      const auth = splitShift(d.auth, d.f);
-      return activeShifts.reduce((sum, s) => sum + auth[s], 0);
-    }));
+    const maxStaff = Math.max(...DISTRICTS.map(d => d.staff));
 
     return DISTRICTS.map(d => {
-      const assigned = splitShift(d.staff, d.f);
-      const authorized = splitShift(d.auth, d.f);
-      const staffSel = activeShifts.reduce((sum, s) => sum + assigned[s], 0);
-      const authSel = activeShifts.reduce((sum, s) => sum + authorized[s], 0);
-      const gap = authSel - staffSel;
       const isSelected = selectedDistricts.includes(d.id);
       const isDimmed = selectedDistricts.length > 0 && !isSelected;
 
-      const segments = activeShifts.map(s => ({
-        width: (assigned[s] / maxAuth) * 100,
-        color: SHIFTS[s].col,
-      }));
-
-      const gapWidth = (gap / maxAuth) * 100;
+      const segments = [
+        { width: (d.lt / maxStaff) * 100, color: '#1b1b1a', label: 'Lt' },
+        { width: (d.sgt / maxStaff) * 100, color: '#55544f', label: 'Sgt' },
+        { width: (d.off / maxStaff) * 100, color: '#2a78d6', label: 'Off' },
+      ];
 
       return {
         id: d.id,
         name: d.name,
+        lt: d.lt,
+        sgt: d.sgt,
+        off: d.off,
+        staff: d.staff,
         segments,
-        gapWidth,
-        staffSel,
-        authSel,
-        gap,
         isSelected,
         isDimmed,
       };
     });
-  }, [activeDistricts, activeShifts, selectedDistricts]);
+  }, [selectedDistricts]);
 
   const hourlyChartData = useMemo(() => {
     const maxCalls = Math.max(...hourlyCallData, 1);
@@ -292,20 +270,22 @@ function App() {
 
         <section className="card" aria-label="Officers by district">
           <div className="card-header">
-            <h2>Officers on hand vs. authorized, by district</h2>
-            <p>Filled bars are officers assigned, split by shift. Dashed outlines are unfilled authorized positions.</p>
+            <h2>Station staffing by rank</h2>
+            <p>Lieutenants, sergeants, and officers assigned to each district station. Total: {fmt(CITYWIDE.stationPatrol)} patrol personnel.</p>
           </div>
 
           <div className="legend-row">
-            {SHIFTS.map((s, i) => (
-              <span key={i} className="legend-item">
-                <span className="legend-swatch" style={{ background: s.col }} />
-                {s.label} {s.range}
-              </span>
-            ))}
             <span className="legend-item">
-              <span className="legend-swatch unfilled" />
-              Unfilled
+              <span className="legend-swatch" style={{ background: '#1b1b1a' }} />
+              Lieutenants
+            </span>
+            <span className="legend-item">
+              <span className="legend-swatch" style={{ background: '#55544f' }} />
+              Sergeants
+            </span>
+            <span className="legend-item">
+              <span className="legend-swatch" style={{ background: '#2a78d6' }} />
+              Officers
             </span>
           </div>
 
@@ -313,8 +293,10 @@ function App() {
             <div className="district-header">
               <span className="col-name" />
               <span className="col-bar" />
-              <span className="col-fill">On hand / auth.</span>
-              <span className="col-short">Short</span>
+              <span className="col-rank">Lt</span>
+              <span className="col-rank">Sgt</span>
+              <span className="col-rank">Off</span>
+              <span className="col-total">Total</span>
             </div>
             {districtRows.map(row => (
               <button
@@ -332,13 +314,12 @@ function App() {
                         style={{ width: `${seg.width}%`, background: seg.color }}
                       />
                     ))}
-                    {row.gapWidth > 0 && (
-                      <span className="bar-gap" style={{ width: `${row.gapWidth}%` }} />
-                    )}
                   </span>
                 </span>
-                <span className="col-fill">{row.staffSel} / {row.authSel}</span>
-                <span className="col-short">{row.gap > 0 ? `−${row.gap}` : row.gap < 0 ? `+${Math.abs(row.gap)}` : '0'}</span>
+                <span className="col-rank">{row.lt}</span>
+                <span className="col-rank">{row.sgt}</span>
+                <span className="col-rank">{row.off}</span>
+                <span className="col-total">{row.staff}</span>
               </button>
             ))}
           </div>
