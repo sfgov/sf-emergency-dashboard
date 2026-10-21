@@ -42,6 +42,16 @@ const OTHER_UNITS = [
   { id: 'svu', name: 'SVU', capt: 1, lt: 1, sgt: 30, off: 2, staff: 34 },
 ];
 
+const NON_PATROL = {
+  investigations: { name: 'Investigations', staff: 0 },
+  admin: { name: 'Administration', staff: 0 },
+  specialOps: { name: 'Special Operations', staff: 0 },
+  chiefStaff: { name: 'Chief of Staff', staff: 0 },
+  chiefsOffice: { name: 'Chief\'s Office', staff: 0 },
+  medicalLeave: { name: 'Medical Leave', staff: 0 },
+  total: 580,
+};
+
 const PARTIAL_DUTY = [
   { location: 'Northern', count: 4 },
   { location: 'Field Ops B', count: 5 },
@@ -252,6 +262,16 @@ function App() {
             <div className="kpi-label">Shortage</div>
             <div className="kpi-value">−{fmt(CITYWIDE.shortage)}</div>
             <div className="kpi-sub">{Math.round((CITYWIDE.shortage / CITYWIDE.target) * 100)}% below target</div>
+          </div>
+          <div className="kpi-card">
+            <div className="kpi-label">Patrol assigned</div>
+            <div className="kpi-value">{fmt(CITYWIDE.patrolTotal)}</div>
+            <div className="kpi-sub">~{SHIFT_TOTALS.total} on duty daily</div>
+          </div>
+          <div className="kpi-card">
+            <div className="kpi-label">Non-patrol</div>
+            <div className="kpi-value">~{fmt(NON_PATROL.total)}</div>
+            <div className="kpi-sub">Investigations, Admin, Special Ops, etc.</div>
           </div>
           <div className="kpi-card">
             <div className="kpi-label">Calls for service</div>
