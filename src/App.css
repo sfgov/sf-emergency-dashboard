@@ -454,6 +454,77 @@ button:focus-visible, select:focus-visible {
   font-weight: 700;
 }
 
+.loading-text {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.response-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.response-card {
+  background: var(--bg-page);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.response-card.over {
+  border-left: 4px solid #d03a39;
+}
+
+.response-card.ok {
+  border-left: 4px solid #1baf7a;
+}
+
+.response-priority {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.response-median {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.response-card.over .response-median {
+  color: #d03a39;
+}
+
+.response-target {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.response-count {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.response-over {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.response-card.over .response-over {
+  color: #d03a39;
+}
+
+@media (max-width: 640px) {
+  .response-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .bar-track {
   display: flex;
   align-items: center;

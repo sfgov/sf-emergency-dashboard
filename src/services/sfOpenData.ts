@@ -3,6 +3,13 @@ import { subDays, format } from 'date-fns';
 
 const SF_DATA_BASE = 'https://data.sfgov.org/resource';
 const POLICE_DATASET = 'wg3w-h783';
+const CAD_DATASET = '2zdj-bwza';
+
+export const RESPONSE_TARGETS = {
+  A: 8,
+  B: 20,
+  C: 60,
+};
 
 export type TimeRange = 'week' | 'month' | '3months' | 'year';
 
@@ -80,4 +87,68 @@ export async function fetchPoliceIncidents(timeRange: TimeRange = 'month'): Prom
         address: d.intersection || '',
       };
     });
+}
+
+export interface CADCall {
+  cad_number: string;
+  received_datetime: string;
+  onscene_datetime: string;
+  priority_final: string;
+  call_type_final_desc: string;
+  analysis_neighborhood: string;
+  police_district: string;
+  disposition: string;
+}
+
+export interface ResponseTimeData {
+  priority: string;
+  district: string;
+  responseMinutes: number;
+  hour: number;
+  callType: string;
+}
+
+export async function fetchCADCalls(timeRange: TimeRange = 'month'): Promise<ResponseTimeData[]> {
+  const dateFilter = getDateFilter(timeRange);
+  const limit = getLimit(timeRange);
+
+  const params = new URLSearchParams({
+    '$where': `received_datetime > '${dateFilter}' AND onscene_datetime IS NOT NULL AND agency = 'POL'`,
+    '$limit': limit,
+    '$order': 'received_datetime DESC',
+    '$select': 'cad_number,received_datetime,onscene_datetime,priority_final,call_type_final_desc,analysis_neighborhood,police_district,disposition',
+  });
+
+  const url = `${SF_DATA_BASE}/${CAD_DATASET}.json?${params.toString()}`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch CAD calls');
+  }
+
+  const data: CADCall[] = await response.json();
+
+  return data
+    .filter(d => d.received_datetime && d.onscene_datetime && d.priority_final && d.police_district)
+    .map(d => {
+      const received = new Date(d.received_datetime);
+      const onscene = new Date(d.onscene_datetime);
+      const responseMinutes = (onscene.getTime() - received.getTime()) / 60000;
+
+      return {
+        priority: d.priority_final.toUpperCase().charAt(0),
+        district: d.police_district,
+        responseMinutes: responseMinutes > 0 && responseMinutes < 180 ? responseMinutes : NaN,
+        hour: received.getHours(),
+        callType: d.call_type_final_desc || 'Unknown',
+      };
+    })
+    .filter(d => !isNaN(d.responseMinutes));
+}
+
+export function calculateMedian(values: number[]): number {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }

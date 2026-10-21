@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useIncidents } from './hooks/useIncidents';
+import { useIncidents, useResponseTimes } from './hooks/useIncidents';
 import type { TimeRange } from './services/sfOpenData';
 import './App.css';
 
@@ -109,6 +109,7 @@ function App() {
   const [hoveredHour, setHoveredHour] = useState<number | null>(null);
 
   const { incidents, loading } = useIncidents(timeRange);
+  const { stats: responseStats, loading: responseLoading } = useResponseTimes(timeRange);
 
   const toggleDistrict = (id: string) => {
     setSelectedDistricts(prev =>
@@ -602,9 +603,36 @@ function App() {
           </div>
         </section>
 
+        <section className="card" aria-label="Response times">
+          <div className="card-header">
+            <h2>Response times by priority</h2>
+            <p>Median minutes from call received to first unit on scene. Targets: A=8min, B=20min, C=60min.</p>
+          </div>
+
+          {responseLoading ? (
+            <div className="loading-text">Loading response time data...</div>
+          ) : (
+            <div className="response-grid">
+              {responseStats.byPriority.map(p => {
+                const overPct = p.count > 0 ? Math.round((p.overTarget / p.count) * 100) : 0;
+                const isOver = p.median > p.target;
+                return (
+                  <div key={p.priority} className={`response-card ${isOver ? 'over' : 'ok'}`}>
+                    <div className="response-priority">Priority {p.priority}</div>
+                    <div className="response-median">{p.median.toFixed(1)} min</div>
+                    <div className="response-target">Target: {p.target} min</div>
+                    <div className="response-count">{fmt(p.count)} calls</div>
+                    <div className="response-over">{overPct}% over target</div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
         <footer className="footer">
-          Data from SF OpenData police incident reports. Staffing figures are illustrative.
-          Officers on duty assumes 72% of assigned officers are available per shift (accounting for days off, leave, court).
+          Data from SF OpenData. Response times from CAD dataset (2zdj-bwza).
+          Methodology follows Controller's Office definitions: median time from call received to first unit on scene, by priority.
         </footer>
       </div>
     </div>
