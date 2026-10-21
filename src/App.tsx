@@ -1,450 +1,378 @@
 import { useState, useMemo } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
 import { useIncidents } from './hooks/useIncidents';
-import { DistrictPriorityTable } from './components/DistrictPriorityTable';
-import { StaffingSimulator } from './components/StaffingSimulator';
-import { ChevronRight, ChevronLeft, Calendar, MapPin, AlertTriangle, Building2 } from 'lucide-react';
-import 'leaflet/dist/leaflet.css';
+import type { TimeRange } from './services/sfOpenData';
+import {
+  BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell,
+  Tooltip, AreaChart, Area
+} from 'recharts';
 import './App.css';
 
-type TimeRange = 'week' | 'month' | '3months';
-type DrillLevel = 'city' | 'district' | 'station';
-type TimeBucket = 'overnight' | 'morning' | 'afternoon' | 'evening';
-
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
-
-const TIME_BUCKETS: Record<TimeBucket, { label: string; hours: number[] }> = {
-  overnight: { label: 'Overnight (10p-6a)', hours: [22, 23, 0, 1, 2, 3, 4, 5] },
-  morning: { label: 'Morning (6a-12p)', hours: [6, 7, 8, 9, 10, 11] },
-  afternoon: { label: 'Afternoon (12p-6p)', hours: [12, 13, 14, 15, 16, 17] },
-  evening: { label: 'Evening (6p-10p)', hours: [18, 19, 20, 21] },
+const STAFFING = {
+  total: 1971,
+  assignments: {
+    patrol: 1050,
+    investigations: 280,
+    administration: 195,
+    specialUnits: 180,
+    training: 85,
+    leave: 181,
+  },
+  shifts: {
+    day: { label: 'Day (0600-1400)', officers: 380, hours: [6, 7, 8, 9, 10, 11, 12, 13] },
+    swing: { label: 'Swing (1400-2200)', officers: 420, hours: [14, 15, 16, 17, 18, 19, 20, 21] },
+    night: { label: 'Night (2200-0600)', officers: 250, hours: [22, 23, 0, 1, 2, 3, 4, 5] },
+  },
 };
 
-function getTimeBucket(hour: number): TimeBucket {
-  if (hour >= 6 && hour < 12) return 'morning';
-  if (hour >= 12 && hour < 18) return 'afternoon';
-  if (hour >= 18 && hour < 22) return 'evening';
-  return 'overnight';
-}
+const SF_DISTRICTS = [
+  'Bayview', 'Central', 'Ingleside', 'Mission', 'Northern',
+  'Park', 'Richmond', 'Southern', 'Taraval', 'Tenderloin'
+];
 
-function getPriorityColor(priority?: string): string {
-  if (!priority) return '#737373';
-  const p = priority.toUpperCase().charAt(0);
-  if (p === 'A' || p === '1' || p === 'E' || p === '3') return '#ff3b30';
-  if (p === 'B' || p === '2') return '#ff9f0a';
-  return '#30d158';
-}
-
-function getIncidentColor(incident: { type: string; isEncampment?: boolean; priority?: string }): string {
-  if (incident.isEncampment) return '#ff6b35';
-  if (incident.type === 'police') return '#3b82f6';
-  if (incident.type === 'fire' || incident.type === 'cad') return getPriorityColor(incident.priority);
-  return '#737373';
-}
-
-function MapController({ center, zoom }: { center: [number, number]; zoom: number }) {
-  const map = useMap();
-  useMemo(() => {
-    map.setView(center, zoom);
-  }, [map, center, zoom]);
-  return null;
+function formatNumber(n: number): string {
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
+  return n.toLocaleString();
 }
 
 function App() {
-  const [timeRange, setTimeRange] = useState<TimeRange>('week');
-  const [drillLevel, setDrillLevel] = useState<DrillLevel>('city');
-  const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
-  const [selectedStation, setSelectedStation] = useState<string | null>(null);
-  const [showEncampmentsOnly, setShowEncampmentsOnly] = useState(false);
+  const [timeRange, setTimeRange] = useState<TimeRange>('month');
+  const { incidents, loading, error } = useIncidents(timeRange);
 
-  const apiTimeRange = timeRange === '3months' ? 'month' : timeRange;
-  const { incidents, loading, error, refetch } = useIncidents(apiTimeRange);
+  const waterfallData = useMemo(() => {
+    const { total, assignments } = STAFFING;
+    let running = total;
 
-  const filteredIncidents = useMemo(() => {
-    let filtered = incidents;
+    type StepType = 'total' | 'subtract' | 'result';
+    const steps: { label: string; value: number; running: number; type: StepType }[] = [
+      { label: 'Total Sworn', value: total, running: total, type: 'total' },
+    ];
 
-    if (selectedDistrict) {
-      filtered = filtered.filter(i =>
-        i.district === selectedDistrict ||
-        i.district === `District ${selectedDistrict}` ||
-        i.neighborhood === selectedDistrict
-      );
+    const subtractions = [
+      { label: 'Investigations', value: assignments.investigations },
+      { label: 'Administration', value: assignments.administration },
+      { label: 'Special Units', value: assignments.specialUnits },
+      { label: 'Training', value: assignments.training },
+      { label: 'Leave/Absent', value: assignments.leave },
+    ];
+
+    for (const sub of subtractions) {
+      running -= sub.value;
+      steps.push({
+        label: sub.label,
+        value: -sub.value,
+        running,
+        type: 'subtract',
+      });
     }
 
-    if (selectedStation) {
-      filtered = filtered.filter(i => i.station === selectedStation);
-    }
+    steps.push({
+      label: 'Patrol Ready',
+      value: running,
+      running,
+      type: 'result',
+    });
 
-    if (showEncampmentsOnly) {
-      filtered = filtered.filter(i => i.isEncampment);
-    }
+    return steps;
+  }, []);
 
-    return filtered;
-  }, [incidents, selectedDistrict, selectedStation, showEncampmentsOnly]);
+  const shiftData = useMemo(() => {
+    return Object.entries(STAFFING.shifts).map(([key, shift]) => ({
+      id: key,
+      label: shift.label,
+      officers: shift.officers,
+      hours: shift.hours,
+    }));
+  }, []);
+
+  const hourlyData = useMemo(() => {
+    const hours = Array.from({ length: 24 }, (_, i) => ({
+      hour: i,
+      label: `${i.toString().padStart(2, '0')}:00`,
+      count: 0,
+    }));
+
+    incidents.forEach(inc => {
+      if (inc.hour >= 0 && inc.hour < 24) {
+        hours[inc.hour].count++;
+      }
+    });
+
+    return hours;
+  }, [incidents]);
+
+  const districtData = useMemo(() => {
+    const counts = new Map<string, number>();
+    incidents.forEach(inc => {
+      counts.set(inc.district, (counts.get(inc.district) || 0) + 1);
+    });
+
+    return SF_DISTRICTS
+      .map(d => ({ district: d, count: counts.get(d) || 0 }))
+      .sort((a, b) => b.count - a.count);
+  }, [incidents]);
 
   const stats = useMemo(() => {
-    const incidentsWithPriority = filteredIncidents.filter(i => i.priority);
+    const days = timeRange === 'week' ? 7 : timeRange === 'month' ? 30 : timeRange === '3months' ? 90 : 365;
+    const perDay = Math.round(incidents.length / days);
 
-    const priorityA = incidentsWithPriority.filter(i => {
-      const p = i.priority!.toUpperCase();
-      return p === '3' || p === 'E' || p === 'A';
-    }).length;
+    const peakHour = hourlyData.reduce((max, h) => h.count > max.count ? h : max, hourlyData[0]);
 
-    const priorityB = incidentsWithPriority.filter(i => {
-      const p = i.priority!.toUpperCase();
-      return p === '2' || p === 'B';
-    }).length;
-
-    const priorityC = incidentsWithPriority.filter(i => {
-      const p = i.priority!.toUpperCase();
-      return p === '1' || p === 'C';
-    }).length;
-
-    const encampments = filteredIncidents.filter(i => i.isEncampment).length;
-
-    const days = timeRange === 'week' ? 7 : timeRange === 'month' ? 30 : 90;
-
-    const timeBuckets = {
-      overnight: 0,
-      morning: 0,
-      afternoon: 0,
-      evening: 0,
-    };
-
-    filteredIncidents.forEach(i => {
-      if (i.timestamp && !isNaN(i.timestamp.getTime())) {
-        const bucket = getTimeBucket(i.timestamp.getHours());
-        timeBuckets[bucket]++;
-      }
+    const shiftCounts = shiftData.map(shift => {
+      const count = shift.hours.reduce((sum, h) => sum + hourlyData[h].count, 0);
+      return { ...shift, incidents: count };
     });
 
-    const callTypes = new Map<string, number>();
-    filteredIncidents.forEach(i => {
-      const cat = i.category || 'Unknown';
-      callTypes.set(cat, (callTypes.get(cat) || 0) + 1);
-    });
-    const topCallTypes = Array.from(callTypes.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 10);
+    return { total: incidents.length, perDay, peakHour, shiftCounts };
+  }, [incidents, timeRange, hourlyData, shiftData]);
 
-    const districts = new Map<string, number>();
-    incidents.forEach(i => {
-      districts.set(i.district, (districts.get(i.district) || 0) + 1);
-    });
-    const districtList = Array.from(districts.entries())
-      .sort((a, b) => b[1] - a[1]);
-
-    const stations = new Map<string, number>();
-    filteredIncidents.forEach(i => {
-      if (i.station) {
-        stations.set(i.station, (stations.get(i.station) || 0) + 1);
-      }
-    });
-    const stationList = Array.from(stations.entries())
-      .sort((a, b) => b[1] - a[1]);
-
-    return {
-      total: filteredIncidents.length,
-      priorityA,
-      priorityB,
-      priorityC,
-      encampments,
-      perDay: {
-        total: Math.round(filteredIncidents.length / days),
-        priorityA: Math.round(priorityA / days),
-        priorityB: Math.round(priorityB / days),
-        priorityC: Math.round(priorityC / days),
-      },
-      timeBuckets,
-      topCallTypes,
-      districtList,
-      stationList,
-    };
-  }, [filteredIncidents, incidents, timeRange]);
-
-  const mapCenter: [number, number] = useMemo(() => {
-    if (selectedDistrict && filteredIncidents.length > 0) {
-      const avgLat = filteredIncidents.reduce((sum, i) => sum + i.latitude, 0) / filteredIncidents.length;
-      const avgLng = filteredIncidents.reduce((sum, i) => sum + i.longitude, 0) / filteredIncidents.length;
-      return [avgLat, avgLng];
-    }
-    return [37.7749, -122.4194];
-  }, [selectedDistrict, filteredIncidents]);
-
-  const mapZoom = drillLevel === 'city' ? 12 : drillLevel === 'district' ? 13 : 14;
-
-  const handleDistrictClick = (district: string) => {
-    setSelectedDistrict(district);
-    setDrillLevel('district');
-    setSelectedStation(null);
-  };
-
-  const handleStationClick = (station: string) => {
-    setSelectedStation(station);
-    setDrillLevel('station');
-  };
-
-  const handleBack = () => {
-    if (drillLevel === 'station') {
-      setSelectedStation(null);
-      setDrillLevel('district');
-    } else if (drillLevel === 'district') {
-      setSelectedDistrict(null);
-      setDrillLevel('city');
-    }
-  };
-
-  const handleHome = () => {
-    setSelectedDistrict(null);
-    setSelectedStation(null);
-    setDrillLevel('city');
-  };
-
+  
   return (
     <div className="app">
-      <header className="header">
-        <div className="header-left">
-          <h1>SF Emergency Response</h1>
-          <div className="breadcrumb">
-            <button onClick={handleHome} className={drillLevel === 'city' ? 'active' : ''}>
-              City
-            </button>
-            {selectedDistrict && (
-              <>
-                <ChevronRight size={14} />
-                <button
-                  onClick={() => { setSelectedStation(null); setDrillLevel('district'); }}
-                  className={drillLevel === 'district' ? 'active' : ''}
-                >
-                  {selectedDistrict}
-                </button>
-              </>
-            )}
-            {selectedStation && (
-              <>
-                <ChevronRight size={14} />
-                <span className="active">Station {selectedStation}</span>
-              </>
-            )}
-          </div>
+      <nav className="nav">
+        <span className="nav-title">SFPD Staffing Analysis</span>
+        <div className="nav-controls">
+          <select value={timeRange} onChange={e => setTimeRange(e.target.value as TimeRange)}>
+            <option value="week">Last 7 days</option>
+            <option value="month">Last 30 days</option>
+            <option value="3months">Last 90 days</option>
+            <option value="year">Last year</option>
+          </select>
         </div>
-        <div className="header-right">
-          <div className="time-selector">
-            <Calendar size={14} />
-            <button
-              className={timeRange === 'week' ? 'active' : ''}
-              onClick={() => setTimeRange('week')}
-            >
-              Week
-            </button>
-            <button
-              className={timeRange === 'month' ? 'active' : ''}
-              onClick={() => setTimeRange('month')}
-            >
-              Month
-            </button>
-            <button
-              className={timeRange === '3months' ? 'active' : ''}
-              onClick={() => setTimeRange('3months')}
-            >
-              3 Mo
-            </button>
+      </nav>
+
+      <main className="main">
+        <section className="hero-section">
+          <div className="hero-content">
+            <span className="hero-label">Total Sworn Officers</span>
+            <span className="hero-value">{STAFFING.total.toLocaleString()}</span>
+            <span className="hero-sublabel">San Francisco Police Department</span>
           </div>
-          <button className="refresh-btn" onClick={refetch}>
-            Refresh
-          </button>
-        </div>
-      </header>
+        </section>
 
-      <main className="main-content">
-        <div className="map-panel">
-          {drillLevel !== 'city' && (
-            <button className="back-btn" onClick={handleBack}>
-              <ChevronLeft size={16} />
-              Back
-            </button>
-          )}
+        <section className="section">
+          <header className="section-header">
+            <h2>From Total to Patrol</h2>
+            <p className="section-desc">
+              Not all officers respond to calls. Here's where they go.
+            </p>
+          </header>
 
-          <div className="map-controls">
-            <label className="toggle-label">
-              <input
-                type="checkbox"
-                checked={showEncampmentsOnly}
-                onChange={(e) => setShowEncampmentsOnly(e.target.checked)}
-              />
-              Encampments only
-            </label>
-          </div>
-
-          {loading && <div className="map-loading">Loading...</div>}
-          {error && <div className="map-error">{error}</div>}
-
-          <MapContainer
-            center={mapCenter}
-            zoom={mapZoom}
-            className="map"
-            zoomControl={false}
-          >
-            <MapController center={mapCenter} zoom={mapZoom} />
-            <TileLayer
-              url={`https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`}
-              attribution='&copy; Mapbox'
-            />
-            {filteredIncidents.map(incident => (
-              <CircleMarker
-                key={incident.id}
-                center={[incident.latitude, incident.longitude]}
-                radius={incident.isEncampment ? 6 : 4}
-                fillColor={getIncidentColor(incident)}
-                fillOpacity={0.7}
-                stroke={incident.isEncampment}
-                color="#fff"
-                weight={incident.isEncampment ? 2 : 0}
-                eventHandlers={{
-                  click: () => {
-                    if (drillLevel === 'city' && incident.district) {
-                      handleDistrictClick(incident.district);
-                    } else if (drillLevel === 'district' && incident.station) {
-                      handleStationClick(incident.station);
-                    }
-                  }
-                }}
-              >
-                <Popup>
-                  <div className="popup-content">
-                    <strong>{incident.category}</strong>
-                    <p>{incident.description}</p>
-                    <p className="popup-meta">
-                      {incident.district} {incident.station && `• Station ${incident.station}`}
-                    </p>
-                    <p className="popup-time">
-                      {incident.timestamp.toLocaleString()}
-                    </p>
-                    {incident.isEncampment && (
-                      <span className="popup-tag encampment">Encampment</span>
-                    )}
-                    {incident.priority && (
-                      <span className="popup-tag" style={{ background: getPriorityColor(incident.priority) }}>
-                        Priority {incident.priority}
-                      </span>
-                    )}
-                  </div>
-                </Popup>
-              </CircleMarker>
-            ))}
-          </MapContainer>
-
-          <div className="map-legend">
-            <span><span className="dot" style={{ background: '#3b82f6' }}></span>Police</span>
-            <span><span className="dot" style={{ background: '#ff3b30' }}></span>Priority A</span>
-            <span><span className="dot" style={{ background: '#ff9f0a' }}></span>Priority B</span>
-            <span><span className="dot" style={{ background: '#30d158' }}></span>Priority C</span>
-            <span><span className="dot encampment-dot" style={{ background: '#ff6b35' }}></span>Encampment</span>
-          </div>
-        </div>
-
-        <div className="analytics-panel">
-          <div className="stats-grid">
-            <div className="stat-card priority-a">
-              <div className="stat-label">Priority A</div>
-              <div className="stat-value">{stats.priorityA.toLocaleString()}</div>
-              <div className="stat-sub">{stats.perDay.priorityA}/day</div>
-            </div>
-            <div className="stat-card priority-b">
-              <div className="stat-label">Priority B</div>
-              <div className="stat-value">{stats.priorityB.toLocaleString()}</div>
-              <div className="stat-sub">{stats.perDay.priorityB}/day</div>
-            </div>
-            <div className="stat-card priority-c">
-              <div className="stat-label">Priority C</div>
-              <div className="stat-value">{stats.priorityC.toLocaleString()}</div>
-              <div className="stat-sub">{stats.perDay.priorityC}/day</div>
-            </div>
-            <div className="stat-card encampment">
-              <div className="stat-label">Encampment 311</div>
-              <div className="stat-value">{stats.encampments.toLocaleString()}</div>
-              <div className="stat-sub">{Math.round(stats.encampments / (timeRange === 'week' ? 7 : timeRange === 'month' ? 30 : 90))}/day</div>
-            </div>
-          </div>
-
-          <div className="section">
-            <h3><AlertTriangle size={14} /> Time of Day</h3>
-            <div className="time-buckets">
-              {(Object.keys(TIME_BUCKETS) as TimeBucket[]).map(bucket => (
-                <div key={bucket} className="time-bucket">
-                  <div className="bucket-label">{TIME_BUCKETS[bucket].label}</div>
-                  <div className="bucket-bar">
+          <div className="waterfall">
+            {waterfallData.map((step) => (
+              <div key={step.label} className={`waterfall-row ${step.type}`}>
+                <span className="waterfall-label">{step.label}</span>
+                <div className="waterfall-bar-container">
+                  {step.type === 'total' && (
+                    <div className="waterfall-bar total" style={{ width: '100%' }}>
+                      <span className="bar-value">{step.value.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {step.type === 'subtract' && (
+                    <>
+                      <div
+                        className="waterfall-bar ghost"
+                        style={{ width: `${(step.running / STAFFING.total) * 100}%` }}
+                      />
+                      <div
+                        className="waterfall-bar subtract"
+                        style={{
+                          width: `${(Math.abs(step.value) / STAFFING.total) * 100}%`,
+                          marginLeft: `${(step.running / STAFFING.total) * 100}%`,
+                        }}
+                      >
+                        <span className="bar-value">−{Math.abs(step.value)}</span>
+                      </div>
+                    </>
+                  )}
+                  {step.type === 'result' && (
                     <div
-                      className="bucket-fill"
-                      style={{
-                        width: `${(stats.timeBuckets[bucket] / Math.max(...Object.values(stats.timeBuckets), 1)) * 100}%`
-                      }}
-                    />
+                      className="waterfall-bar result"
+                      style={{ width: `${(step.running / STAFFING.total) * 100}%` }}
+                    >
+                      <span className="bar-value">{step.running.toLocaleString()}</span>
+                    </div>
+                  )}
+                </div>
+                <span className="waterfall-running">
+                  {step.type !== 'total' && step.type !== 'result' && step.running.toLocaleString()}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <div className="waterfall-summary">
+            <strong>{Math.round((STAFFING.assignments.patrol / STAFFING.total) * 100)}%</strong> of sworn officers are available for patrol duty
+          </div>
+        </section>
+
+        <section className="section">
+          <header className="section-header">
+            <h2>Shift Coverage</h2>
+            <p className="section-desc">
+              Patrol officers work three shifts. Swing has the most; night the fewest.
+            </p>
+          </header>
+
+          <div className="shifts-grid">
+            {shiftData.map(shift => {
+              const pct = (shift.officers / STAFFING.assignments.patrol) * 100;
+              return (
+                <div key={shift.id} className="shift-card">
+                  <div className="shift-header">
+                    <span className="shift-label">{shift.label}</span>
                   </div>
-                  <div className="bucket-count">{stats.timeBuckets[bucket].toLocaleString()}</div>
+                  <div className="shift-value">{shift.officers}</div>
+                  <div className="shift-bar">
+                    <div className="shift-fill" style={{ width: `${pct}%` }} />
+                  </div>
+                  <div className="shift-pct">{Math.round(pct)}% of patrol</div>
                 </div>
-              ))}
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="section">
+          <header className="section-header">
+            <h2>Calls for Service</h2>
+            <p className="section-desc">
+              {loading ? 'Loading...' : error ? error : `${formatNumber(stats.total)} incidents in the selected period — ${stats.perDay} per day average.`}
+            </p>
+          </header>
+
+          <div className="stats-row">
+            <div className="stat-tile">
+              <span className="stat-label">Total Incidents</span>
+              <span className="stat-value">{formatNumber(stats.total)}</span>
+            </div>
+            <div className="stat-tile">
+              <span className="stat-label">Per Day</span>
+              <span className="stat-value">{stats.perDay}</span>
+            </div>
+            <div className="stat-tile">
+              <span className="stat-label">Peak Hour</span>
+              <span className="stat-value">{stats.peakHour?.label || '-'}</span>
             </div>
           </div>
+        </section>
 
-          <div className="section">
-            <h3>Top Call Types</h3>
-            <div className="call-types-list">
-              {stats.topCallTypes.map(([type, count]) => (
-                <div key={type} className="call-type-row">
-                  <span className="call-type-name">{type}</span>
-                  <span className="call-type-count">{count.toLocaleString()}</span>
-                </div>
-              ))}
-            </div>
+        <section className="section">
+          <header className="section-header">
+            <h2>When Calls Come In</h2>
+            <p className="section-desc">
+              Incident volume by hour of day. Peak demand often misaligns with staffing.
+            </p>
+          </header>
+
+          <div className="chart-container">
+            <ResponsiveContainer width="100%" height={200}>
+              <AreaChart data={hourlyData} margin={{ top: 8, right: 8, bottom: 24, left: 0 }}>
+                <defs>
+                  <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#3987e5" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#3987e5" stopOpacity={0.05} />
+                  </linearGradient>
+                </defs>
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 11, fill: '#898781' }}
+                  tickLine={false}
+                  axisLine={{ stroke: '#383835' }}
+                  interval={5}
+                />
+                <YAxis hide />
+                <Tooltip
+                  contentStyle={{
+                    background: '#1a1a19',
+                    border: '1px solid #2c2c2a',
+                    borderRadius: 4,
+                    fontSize: 12,
+                  }}
+                  labelStyle={{ color: '#f0efec' }}
+                  itemStyle={{ color: '#c3c2b7' }}
+                  formatter={(value) => [Number(value).toLocaleString(), 'Incidents']}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="count"
+                  stroke="#3987e5"
+                  strokeWidth={2}
+                  fill="url(#areaGradient)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
 
-          {drillLevel === 'city' && (
-            <div className="section">
-              <h3><MapPin size={14} /> Districts</h3>
-              <div className="district-list">
-                {stats.districtList.slice(0, 12).map(([district, count]) => (
-                  <button
-                    key={district}
-                    className="district-row"
-                    onClick={() => handleDistrictClick(district)}
-                  >
-                    <span className="district-name">{district}</span>
-                    <span className="district-count">{count.toLocaleString()}</span>
-                    <ChevronRight size={14} />
-                  </button>
-                ))}
+          <div className="shift-comparison">
+            {stats.shiftCounts.map(sc => (
+              <div key={sc.id} className="shift-stat">
+                <span className="shift-stat-label">{sc.label.split(' ')[0]}</span>
+                <span className="shift-stat-value">{formatNumber(sc.incidents)}</span>
+                <span className="shift-stat-ratio">
+                  {Math.round(sc.incidents / sc.officers)} calls/officer
+                </span>
               </div>
-            </div>
-          )}
-
-          {drillLevel === 'district' && stats.stationList.length > 0 && (
-            <div className="section">
-              <h3><Building2 size={14} /> Stations</h3>
-              <div className="station-list">
-                {stats.stationList.map(([station, count]) => (
-                  <button
-                    key={station}
-                    className="station-row"
-                    onClick={() => handleStationClick(station)}
-                  >
-                    <span className="station-name">Station {station}</span>
-                    <span className="station-count">{count.toLocaleString()}</span>
-                    <ChevronRight size={14} />
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <DistrictPriorityTable incidents={incidents} />
-
-          <StaffingSimulator incidents={incidents} />
-
-          <div className="total-footer">
-            Total: {stats.total.toLocaleString()} incidents ({stats.perDay.total}/day)
+            ))}
           </div>
-        </div>
+        </section>
+
+        <section className="section">
+          <header className="section-header">
+            <h2>District Workload</h2>
+            <p className="section-desc">
+              Incident volume by police district.
+            </p>
+          </header>
+
+          <div className="chart-container">
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart
+                data={districtData}
+                layout="vertical"
+                margin={{ top: 0, right: 40, bottom: 0, left: 80 }}
+              >
+                <XAxis type="number" hide />
+                <YAxis
+                  type="category"
+                  dataKey="district"
+                  tick={{ fontSize: 13, fill: '#c3c2b7' }}
+                  tickLine={false}
+                  axisLine={false}
+                  width={75}
+                />
+                <Tooltip
+                  contentStyle={{
+                    background: '#1a1a19',
+                    border: '1px solid #2c2c2a',
+                    borderRadius: 4,
+                    fontSize: 12,
+                  }}
+                  labelStyle={{ color: '#f0efec' }}
+                  formatter={(value) => [Number(value).toLocaleString(), 'Incidents']}
+                  cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                />
+                <Bar dataKey="count" radius={[0, 4, 4, 0]} maxBarSize={24}>
+                  {districtData.map((entry, index) => (
+                    <Cell
+                      key={entry.district}
+                      fill={index === 0 ? '#3987e5' : '#256abf'}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
+
+        <section className="section closing">
+          <header className="section-header">
+            <h2>The Gap</h2>
+            <p className="section-desc">
+              With {STAFFING.assignments.patrol.toLocaleString()} patrol officers across 10 districts and 3 shifts,
+              each officer handles roughly {Math.round(stats.total / STAFFING.assignments.patrol)} incidents per {timeRange === 'week' ? 'week' : timeRange === 'month' ? 'month' : timeRange === '3months' ? 'quarter' : 'year'}.
+            </p>
+          </header>
+        </section>
       </main>
     </div>
   );
