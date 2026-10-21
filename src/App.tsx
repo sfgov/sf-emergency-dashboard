@@ -3,17 +3,27 @@ import { useIncidents } from './hooks/useIncidents';
 import type { TimeRange } from './services/sfOpenData';
 import './App.css';
 
+const CITYWIDE = {
+  target: 2257,
+  totalSworn: 1934,
+  airport: 134,
+  recruits: 84,
+  get cityOfficers() { return this.totalSworn - this.airport; },
+  get effective() { return this.cityOfficers - this.recruits; },
+  get shortage() { return this.target - this.effective; },
+};
+
 const DISTRICTS = [
-  { id: 'central', name: 'Central', staff: 98, auth: 118, f: [0.30, 0.40, 0.30] },
-  { id: 'southern', name: 'Southern', staff: 118, auth: 140, f: [0.30, 0.42, 0.28] },
-  { id: 'bayview', name: 'Bayview', staff: 104, auth: 124, f: [0.31, 0.38, 0.31] },
-  { id: 'mission', name: 'Mission', staff: 112, auth: 134, f: [0.29, 0.41, 0.30] },
-  { id: 'northern', name: 'Northern', staff: 110, auth: 128, f: [0.30, 0.40, 0.30] },
-  { id: 'park', name: 'Park', staff: 70, auth: 84, f: [0.34, 0.38, 0.28] },
-  { id: 'richmond', name: 'Richmond', staff: 68, auth: 80, f: [0.34, 0.38, 0.28] },
-  { id: 'ingleside', name: 'Ingleside', staff: 84, auth: 98, f: [0.32, 0.38, 0.30] },
-  { id: 'taraval', name: 'Taraval', staff: 72, auth: 84, f: [0.33, 0.38, 0.29] },
-  { id: 'tenderloin', name: 'Tenderloin', staff: 116, auth: 138, f: [0.28, 0.40, 0.32] },
+  { id: 'central', name: 'Central', staff: 156, auth: 205, f: [0.30, 0.40, 0.30] },
+  { id: 'southern', name: 'Southern', staff: 188, auth: 248, f: [0.30, 0.42, 0.28] },
+  { id: 'bayview', name: 'Bayview', staff: 166, auth: 219, f: [0.31, 0.38, 0.31] },
+  { id: 'mission', name: 'Mission', staff: 179, auth: 236, f: [0.29, 0.41, 0.30] },
+  { id: 'northern', name: 'Northern', staff: 175, auth: 231, f: [0.30, 0.40, 0.30] },
+  { id: 'park', name: 'Park', staff: 112, auth: 147, f: [0.34, 0.38, 0.28] },
+  { id: 'richmond', name: 'Richmond', staff: 108, auth: 143, f: [0.34, 0.38, 0.28] },
+  { id: 'ingleside', name: 'Ingleside', staff: 134, auth: 176, f: [0.32, 0.38, 0.30] },
+  { id: 'taraval', name: 'Taraval', staff: 115, auth: 151, f: [0.33, 0.38, 0.29] },
+  { id: 'tenderloin', name: 'Tenderloin', staff: 183, auth: 241, f: [0.28, 0.40, 0.32] },
 ];
 
 const SHIFTS = [
@@ -200,19 +210,24 @@ function App() {
 
         <section className="kpi-grid" aria-label="Staffing summary">
           <div className="kpi-card">
-            <div className="kpi-label">Authorized positions</div>
-            <div className="kpi-value">{fmt(kpis.authTotal)}</div>
-            <div className="kpi-sub">selected scope</div>
+            <div className="kpi-label">Target staffing</div>
+            <div className="kpi-value">{fmt(CITYWIDE.target)}</div>
+            <div className="kpi-sub">authorized for the city</div>
           </div>
           <div className="kpi-card">
-            <div className="kpi-label">Officers on hand</div>
-            <div className="kpi-value">{fmt(kpis.staffTotal)}</div>
-            <div className="kpi-sub">{kpis.fillPct}% of authorized filled</div>
+            <div className="kpi-label">Total sworn</div>
+            <div className="kpi-value">{fmt(CITYWIDE.totalSworn)}</div>
+            <div className="kpi-sub">{fmt(CITYWIDE.airport)} airport, {fmt(CITYWIDE.recruits)} recruits</div>
+          </div>
+          <div className="kpi-card">
+            <div className="kpi-label">City officers (non-airport)</div>
+            <div className="kpi-value">{fmt(CITYWIDE.effective)}</div>
+            <div className="kpi-sub">{fmt(CITYWIDE.cityOfficers)} minus {fmt(CITYWIDE.recruits)} recruits</div>
           </div>
           <div className="kpi-card inverted">
             <div className="kpi-label">Shortage</div>
-            <div className="kpi-value">{kpis.shortage > 0 ? `−${fmt(kpis.shortage)}` : '0'}</div>
-            <div className="kpi-sub">{kpis.authTotal > 0 ? Math.round((kpis.shortage / kpis.authTotal) * 100) : 0}% of positions unfilled</div>
+            <div className="kpi-value">−{fmt(CITYWIDE.shortage)}</div>
+            <div className="kpi-sub">{Math.round((CITYWIDE.shortage / CITYWIDE.target) * 100)}% below target</div>
           </div>
           <div className="kpi-card">
             <div className="kpi-label">Calls for service</div>
