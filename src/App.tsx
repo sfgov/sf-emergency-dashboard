@@ -1,496 +1,444 @@
 import { useState, useMemo } from 'react';
 import { useIncidents } from './hooks/useIncidents';
 import type { TimeRange } from './services/sfOpenData';
-import {
-  BarChart, Bar, XAxis, YAxis, ResponsiveContainer,
-  Tooltip, AreaChart, Area
-} from 'recharts';
 import './App.css';
 
-const STAFFING = {
-  total: 1971,
-  assignments: {
-    patrol: 1050,
-    investigations: 280,
-    administration: 195,
-    specialUnits: 180,
-    training: 85,
-    leave: 181,
-  },
-  shifts: {
-    day: { label: 'Day (0600-1400)', officers: 380, hours: [6, 7, 8, 9, 10, 11, 12, 13] },
-    swing: { label: 'Swing (1400-2200)', officers: 420, hours: [14, 15, 16, 17, 18, 19, 20, 21] },
-    night: { label: 'Night (2200-0600)', officers: 250, hours: [22, 23, 0, 1, 2, 3, 4, 5] },
-  },
-  stations: {
-    'Bayview': { officers: 95, address: '201 Williams Ave' },
-    'Central': { officers: 110, address: '766 Vallejo St' },
-    'Ingleside': { officers: 100, address: '1 Sgt John V Young Ln' },
-    'Mission': { officers: 115, address: '630 Valencia St' },
-    'Northern': { officers: 105, address: '1125 Fillmore St' },
-    'Park': { officers: 85, address: '1899 Waller St' },
-    'Richmond': { officers: 90, address: '461 6th Ave' },
-    'Southern': { officers: 120, address: '850 Bryant St' },
-    'Taraval': { officers: 95, address: '2345 24th Ave' },
-    'Tenderloin': { officers: 135, address: '301 Eddy St' },
-  } as Record<string, { officers: number; address: string }>,
+const DISTRICTS = [
+  { id: 'central', name: 'Central', staff: 98, auth: 118, f: [0.30, 0.40, 0.30] },
+  { id: 'southern', name: 'Southern', staff: 118, auth: 140, f: [0.30, 0.42, 0.28] },
+  { id: 'bayview', name: 'Bayview', staff: 104, auth: 124, f: [0.31, 0.38, 0.31] },
+  { id: 'mission', name: 'Mission', staff: 112, auth: 134, f: [0.29, 0.41, 0.30] },
+  { id: 'northern', name: 'Northern', staff: 110, auth: 128, f: [0.30, 0.40, 0.30] },
+  { id: 'park', name: 'Park', staff: 70, auth: 84, f: [0.34, 0.38, 0.28] },
+  { id: 'richmond', name: 'Richmond', staff: 68, auth: 80, f: [0.34, 0.38, 0.28] },
+  { id: 'ingleside', name: 'Ingleside', staff: 84, auth: 98, f: [0.32, 0.38, 0.30] },
+  { id: 'taraval', name: 'Taraval', staff: 72, auth: 84, f: [0.33, 0.38, 0.29] },
+  { id: 'tenderloin', name: 'Tenderloin', staff: 116, auth: 138, f: [0.28, 0.40, 0.32] },
+];
+
+const SHIFTS = [
+  { label: 'Day', range: '6a–2p', col: '#2a78d6', hours: [6,7,8,9,10,11,12,13] },
+  { label: 'Swing', range: '2p–10p', col: '#eb6834', hours: [14,15,16,17,18,19,20,21] },
+  { label: 'Night', range: '10p–6a', col: '#1baf7a', hours: [22,23,0,1,2,3,4,5] },
+];
+
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const shiftOf = (h: number) => (h >= 6 && h < 14 ? 0 : h >= 14 && h < 22 ? 1 : 2);
+const hourName = (h: number) => { const s = h < 12 ? 'a' : 'p'; const n = h % 12 === 0 ? 12 : h % 12; return n + s; };
+
+const splitShift = (total: number, f: number[]) => {
+  const a = Math.round(total * f[0]);
+  const b = Math.round(total * f[1]);
+  return [a, b, total - a - b];
 };
 
-const SF_DISTRICTS = Object.keys(STAFFING.stations);
-
-function formatNumber(n: number): string {
-  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
-  return n.toLocaleString();
-}
+const fmt = (n: number) => Math.round(n).toLocaleString('en-US');
 
 function App() {
   const [timeRange, setTimeRange] = useState<TimeRange>('month');
-  const [selectedStation, setSelectedStation] = useState<string | null>(null);
-  const { incidents, loading, error } = useIncidents(timeRange);
+  const [selectedDistricts, setSelectedDistricts] = useState<string[]>([]);
+  const [selectedShifts, setSelectedShifts] = useState<number[]>([]);
+  const [hoveredHour, setHoveredHour] = useState<number | null>(null);
 
-  const filteredIncidents = useMemo(() => {
-    if (!selectedStation) return incidents;
-    return incidents.filter(i => i.district === selectedStation);
-  }, [incidents, selectedStation]);
+  const { incidents, loading } = useIncidents(timeRange);
 
-  const waterfallData = useMemo(() => {
-    const { total, assignments } = STAFFING;
-    let running = total;
+  const toggleDistrict = (id: string) => {
+    setSelectedDistricts(prev =>
+      prev.includes(id) ? prev.filter(d => d !== id) : [...prev, id]
+    );
+  };
 
-    type StepType = 'total' | 'subtract' | 'result';
-    const steps: { label: string; value: number; running: number; type: StepType }[] = [
-      { label: 'Total Sworn', value: total, running: total, type: 'total' },
-    ];
+  const toggleShift = (idx: number) => {
+    setSelectedShifts(prev =>
+      prev.includes(idx) ? prev.filter(s => s !== idx) : [...prev, idx]
+    );
+  };
 
-    const subtractions = [
-      { label: 'Investigations', value: assignments.investigations },
-      { label: 'Administration', value: assignments.administration },
-      { label: 'Special Units', value: assignments.specialUnits },
-      { label: 'Training', value: assignments.training },
-      { label: 'Leave/Absent', value: assignments.leave },
-    ];
+  const activeDistricts = selectedDistricts.length ? selectedDistricts : DISTRICTS.map(d => d.id);
+  const activeShifts = selectedShifts.length ? selectedShifts : [0, 1, 2];
 
-    for (const sub of subtractions) {
-      running -= sub.value;
-      steps.push({
-        label: sub.label,
-        value: -sub.value,
-        running,
-        type: 'subtract',
+  const hourlyCallData = useMemo(() => {
+    const counts = HOURS.map(() => 0);
+    const filteredIncidents = incidents.filter(inc => {
+      const districtMatch = activeDistricts.some(id => {
+        const district = DISTRICTS.find(d => d.id === id);
+        return district && inc.district.toLowerCase().includes(district.name.toLowerCase());
       });
-    }
-
-    steps.push({
-      label: 'Patrol Ready',
-      value: running,
-      running,
-      type: 'result',
+      return districtMatch;
     });
-
-    return steps;
-  }, []);
-
-  const shiftData = useMemo(() => {
-    return Object.entries(STAFFING.shifts).map(([key, shift]) => ({
-      id: key,
-      label: shift.label,
-      officers: shift.officers,
-      hours: shift.hours,
-    }));
-  }, []);
-
-  const hourlyData = useMemo(() => {
-    const hours = Array.from({ length: 24 }, (_, i) => ({
-      hour: i,
-      label: `${i.toString().padStart(2, '0')}:00`,
-      count: 0,
-    }));
 
     filteredIncidents.forEach(inc => {
       if (inc.hour >= 0 && inc.hour < 24) {
-        hours[inc.hour].count++;
+        if (activeShifts.includes(shiftOf(inc.hour))) {
+          counts[inc.hour]++;
+        }
       }
     });
 
-    return hours;
-  }, [filteredIncidents]);
+    return counts;
+  }, [incidents, activeDistricts, activeShifts]);
 
-  const districtData = useMemo(() => {
-    const counts = new Map<string, number>();
-    incidents.forEach(inc => {
-      counts.set(inc.district, (counts.get(inc.district) || 0) + 1);
+  const kpis = useMemo(() => {
+    const scope = DISTRICTS.filter(d => activeDistricts.includes(d.id));
+    let authTotal = 0;
+    let staffTotal = 0;
+
+    scope.forEach(d => {
+      const assigned = splitShift(d.staff, d.f);
+      const authorized = splitShift(d.auth, d.f);
+      activeShifts.forEach(s => {
+        authTotal += authorized[s];
+        staffTotal += assigned[s];
+      });
     });
 
-    return SF_DISTRICTS
-      .map(d => ({
-        district: d,
-        count: counts.get(d) || 0,
-        officers: STAFFING.stations[d]?.officers || 0,
-      }))
-      .sort((a, b) => b.count - a.count);
-  }, [incidents]);
-
-  const stats = useMemo(() => {
+    const shortage = authTotal - staffTotal;
+    const fillPct = authTotal > 0 ? Math.round((staffTotal / authTotal) * 100) : 0;
+    const totalCalls = hourlyCallData.reduce((a, b) => a + b, 0);
     const days = timeRange === 'week' ? 7 : timeRange === 'month' ? 30 : timeRange === '3months' ? 90 : 365;
-    const perDay = Math.round(filteredIncidents.length / days);
-    const peakHour = hourlyData.reduce((max, h) => h.count > max.count ? h : max, hourlyData[0]);
+    const callsPerDay = Math.round(totalCalls / days);
 
-    const shiftCounts = shiftData.map(shift => {
-      const count = shift.hours.reduce((sum, h) => sum + hourlyData[h].count, 0);
-      return { ...shift, incidents: count };
+    return { authTotal, staffTotal, shortage, fillPct, totalCalls, callsPerDay };
+  }, [activeDistricts, activeShifts, hourlyCallData, timeRange]);
+
+  const districtRows = useMemo(() => {
+    const maxAuth = Math.max(...DISTRICTS.map(d => {
+      const auth = splitShift(d.auth, d.f);
+      return activeShifts.reduce((sum, s) => sum + auth[s], 0);
+    }));
+
+    return DISTRICTS.map(d => {
+      const assigned = splitShift(d.staff, d.f);
+      const authorized = splitShift(d.auth, d.f);
+      const staffSel = activeShifts.reduce((sum, s) => sum + assigned[s], 0);
+      const authSel = activeShifts.reduce((sum, s) => sum + authorized[s], 0);
+      const gap = authSel - staffSel;
+      const isSelected = selectedDistricts.includes(d.id);
+      const isDimmed = selectedDistricts.length > 0 && !isSelected;
+
+      const segments = activeShifts.map(s => ({
+        width: (assigned[s] / maxAuth) * 100,
+        color: SHIFTS[s].col,
+      }));
+
+      const gapWidth = (gap / maxAuth) * 100;
+
+      return {
+        id: d.id,
+        name: d.name,
+        segments,
+        gapWidth,
+        staffSel,
+        authSel,
+        gap,
+        isSelected,
+        isDimmed,
+      };
     });
+  }, [activeDistricts, activeShifts, selectedDistricts]);
 
-    const stationOfficers = selectedStation ? STAFFING.stations[selectedStation]?.officers || 0 : STAFFING.assignments.patrol;
+  const hourlyChartData = useMemo(() => {
+    const maxCalls = Math.max(...hourlyCallData, 1);
+    const scope = DISTRICTS.filter(d => activeDistricts.includes(d.id));
 
-    return {
-      total: filteredIncidents.length,
-      perDay,
-      peakHour,
-      shiftCounts,
-      stationOfficers,
-      incidentsPerOfficer: Math.round(filteredIncidents.length / stationOfficers),
-    };
-  }, [filteredIncidents, timeRange, hourlyData, shiftData, selectedStation]);
+    return HOURS.map(h => {
+      const s = shiftOf(h);
+      const isActive = activeShifts.includes(s);
 
-  const topCategories = useMemo(() => {
-    const counts = new Map<string, number>();
-    filteredIncidents.forEach(inc => {
-      counts.set(inc.category, (counts.get(inc.category) || 0) + 1);
+      let dutyTotal = 0;
+      scope.forEach(d => {
+        const assigned = splitShift(d.staff, d.f);
+        dutyTotal += Math.round(assigned[s] * 0.72);
+      });
+
+      const calls = hourlyCallData[h];
+      const ratio = dutyTotal > 0 ? calls / dutyTotal : 0;
+
+      return {
+        hour: h,
+        label: hourName(h),
+        shift: s,
+        calls,
+        duty: dutyTotal,
+        ratio,
+        callsHeight: (calls / maxCalls) * 100,
+        isActive,
+      };
     });
-    return Array.from(counts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 8)
-      .map(([category, count]) => ({ category, count }));
-  }, [filteredIncidents]);
+  }, [hourlyCallData, activeDistricts, activeShifts]);
+
+  const maxDuty = Math.max(...hourlyChartData.map(h => h.duty), 1);
+  const maxRatio = Math.max(...hourlyChartData.map(h => h.ratio), 1);
+
+  const scopeText = useMemo(() => {
+    const dText = selectedDistricts.length
+      ? DISTRICTS.filter(d => selectedDistricts.includes(d.id)).map(d => d.name).join(', ')
+      : 'Citywide (all 10 districts)';
+    const sText = selectedShifts.length
+      ? selectedShifts.map(i => SHIFTS[i].label).join(' + ') + ' shift' + (selectedShifts.length > 1 ? 's' : '')
+      : 'all shifts';
+    return `${dText} · ${sText}`;
+  }, [selectedDistricts, selectedShifts]);
 
   return (
     <div className="app">
-      <nav className="nav">
-        <div className="nav-left">
-          <span className="nav-title">SFPD Staffing Analysis</span>
-          {selectedStation && (
-            <button className="nav-back" onClick={() => setSelectedStation(null)}>
-              ← All Stations
-            </button>
-          )}
-        </div>
-        <div className="nav-controls">
-          <select value={timeRange} onChange={e => setTimeRange(e.target.value as TimeRange)}>
-            <option value="week">Last 7 days</option>
-            <option value="month">Last 30 days</option>
-            <option value="3months">Last 90 days</option>
-            <option value="year">Last year</option>
-          </select>
-        </div>
-      </nav>
+      <div className="container">
+        <header className="header">
+          <div className="header-text">
+            <h1>Patrol staffing shortage and capacity</h1>
+            <p>How many officers we have against what is authorized, and what it means for calls for service</p>
+          </div>
+          <div className="header-badge">
+            <select value={timeRange} onChange={e => setTimeRange(e.target.value as TimeRange)}>
+              <option value="week">Last 7 days</option>
+              <option value="month">Last 30 days</option>
+              <option value="3months">Last 90 days</option>
+              <option value="year">Last year</option>
+            </select>
+          </div>
+        </header>
 
-      <main className="main">
-        {!selectedStation ? (
-          <>
-            <section className="hero-section">
-              <div className="hero-content">
-                <span className="hero-label">Total Sworn Officers</span>
-                <span className="hero-value">{STAFFING.total.toLocaleString()}</span>
-                <span className="hero-sublabel">San Francisco Police Department</span>
+        <section className="kpi-grid" aria-label="Staffing summary">
+          <div className="kpi-card">
+            <div className="kpi-label">Authorized positions</div>
+            <div className="kpi-value">{fmt(kpis.authTotal)}</div>
+            <div className="kpi-sub">selected scope</div>
+          </div>
+          <div className="kpi-card">
+            <div className="kpi-label">Officers on hand</div>
+            <div className="kpi-value">{fmt(kpis.staffTotal)}</div>
+            <div className="kpi-sub">{kpis.fillPct}% of authorized filled</div>
+          </div>
+          <div className="kpi-card inverted">
+            <div className="kpi-label">Shortage</div>
+            <div className="kpi-value">{kpis.shortage > 0 ? `−${fmt(kpis.shortage)}` : '0'}</div>
+            <div className="kpi-sub">{kpis.authTotal > 0 ? Math.round((kpis.shortage / kpis.authTotal) * 100) : 0}% of positions unfilled</div>
+          </div>
+          <div className="kpi-card">
+            <div className="kpi-label">Calls for service</div>
+            <div className="kpi-value">{loading ? '...' : fmt(kpis.totalCalls)}</div>
+            <div className="kpi-sub">{kpis.callsPerDay} per day average</div>
+          </div>
+        </section>
+
+        <section className="filter-section" aria-label="Filters">
+          <div className="filter-header">
+            <div className="filter-scope">Showing: <strong>{scopeText}</strong></div>
+            {(selectedDistricts.length > 0 || selectedShifts.length > 0) && (
+              <button className="reset-btn" onClick={() => { setSelectedDistricts([]); setSelectedShifts([]); }}>
+                Reset to citywide
+              </button>
+            )}
+          </div>
+
+          <div className="filter-row">
+            <span className="filter-label">District</span>
+            <div className="chip-group">
+              <button
+                className={`chip ${selectedDistricts.length === 0 ? 'active' : ''}`}
+                onClick={() => setSelectedDistricts([])}
+              >
+                All districts
+              </button>
+              {DISTRICTS.map(d => (
+                <button
+                  key={d.id}
+                  className={`chip ${selectedDistricts.includes(d.id) ? 'active' : ''}`}
+                  onClick={() => toggleDistrict(d.id)}
+                >
+                  {d.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="filter-row">
+            <span className="filter-label">Shift</span>
+            <div className="chip-group">
+              <button
+                className={`chip ${selectedShifts.length === 0 ? 'active' : ''}`}
+                onClick={() => setSelectedShifts([])}
+              >
+                All shifts
+              </button>
+              {SHIFTS.map((s, i) => (
+                <button
+                  key={i}
+                  className={`chip ${selectedShifts.includes(i) ? 'active' : ''}`}
+                  onClick={() => toggleShift(i)}
+                >
+                  <span className="chip-dot" style={{ background: s.col }} />
+                  {s.label} {s.range}
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="card" aria-label="Officers by district">
+          <div className="card-header">
+            <h2>Officers on hand vs. authorized, by district</h2>
+            <p>Filled bars are officers assigned, split by shift. Dashed outlines are unfilled authorized positions.</p>
+          </div>
+
+          <div className="legend-row">
+            {SHIFTS.map((s, i) => (
+              <span key={i} className="legend-item">
+                <span className="legend-swatch" style={{ background: s.col }} />
+                {s.label} {s.range}
+              </span>
+            ))}
+            <span className="legend-item">
+              <span className="legend-swatch unfilled" />
+              Unfilled
+            </span>
+          </div>
+
+          <div className="district-table">
+            <div className="district-header">
+              <span className="col-name" />
+              <span className="col-bar" />
+              <span className="col-fill">On hand / auth.</span>
+              <span className="col-short">Short</span>
+            </div>
+            {districtRows.map(row => (
+              <button
+                key={row.id}
+                className={`district-row ${row.isSelected ? 'selected' : ''} ${row.isDimmed ? 'dimmed' : ''}`}
+                onClick={() => toggleDistrict(row.id)}
+              >
+                <span className="col-name">{row.name}</span>
+                <span className="col-bar">
+                  <span className="bar-track">
+                    {row.segments.map((seg, i) => (
+                      <span
+                        key={i}
+                        className="bar-segment"
+                        style={{ width: `${seg.width}%`, background: seg.color }}
+                      />
+                    ))}
+                    {row.gapWidth > 0 && (
+                      <span className="bar-gap" style={{ width: `${row.gapWidth}%` }} />
+                    )}
+                  </span>
+                </span>
+                <span className="col-fill">{row.staffSel} / {row.authSel}</span>
+                <span className="col-short">{row.gap > 0 ? `−${row.gap}` : row.gap < 0 ? `+${Math.abs(row.gap)}` : '0'}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="card" aria-label="Hourly capacity">
+          <div className="card-header">
+            <h2>Capacity by hour of day</h2>
+            <p>Officers on duty and calls for service for {scopeText}.</p>
+          </div>
+
+          <div className="hour-readout">
+            {hoveredHour !== null
+              ? `${hourName(hoveredHour)} · ${SHIFTS[shiftOf(hoveredHour)].label} shift · ${hourlyChartData[hoveredHour].duty} officers on duty · ${hourlyChartData[hoveredHour].calls} calls · ${hourlyChartData[hoveredHour].ratio.toFixed(2)} calls per officer`
+              : 'Hover an hour to see details.'
+            }
+          </div>
+
+          <div className="hourly-charts">
+            <div className="chart-row">
+              <div className="chart-label">
+                <div className="chart-title">Officers on duty</div>
+                <div className="chart-sub">peak {fmt(maxDuty)}</div>
               </div>
-            </section>
-
-            <section className="section">
-              <header className="section-header">
-                <h2>From Total to Patrol</h2>
-                <p className="section-desc">
-                  Not all officers respond to calls. Here's where they go.
-                </p>
-              </header>
-
-              <div className="waterfall">
-                {waterfallData.map((step) => (
-                  <div key={step.label} className={`waterfall-row ${step.type}`}>
-                    <span className="waterfall-label">{step.label}</span>
-                    <div className="waterfall-bar-container">
-                      {step.type === 'total' && (
-                        <div className="waterfall-bar total" style={{ width: '100%' }}>
-                          <span className="bar-value">{step.value.toLocaleString()}</span>
-                        </div>
-                      )}
-                      {step.type === 'subtract' && (
-                        <>
-                          <div
-                            className="waterfall-bar ghost"
-                            style={{ width: `${(step.running / STAFFING.total) * 100}%` }}
-                          />
-                          <div
-                            className="waterfall-bar subtract"
-                            style={{
-                              width: `${(Math.abs(step.value) / STAFFING.total) * 100}%`,
-                              marginLeft: `${(step.running / STAFFING.total) * 100}%`,
-                            }}
-                          >
-                            <span className="bar-value">−{Math.abs(step.value)}</span>
-                          </div>
-                        </>
-                      )}
-                      {step.type === 'result' && (
-                        <div
-                          className="waterfall-bar result"
-                          style={{ width: `${(step.running / STAFFING.total) * 100}%` }}
-                        >
-                          <span className="bar-value">{step.running.toLocaleString()}</span>
-                        </div>
-                      )}
-                    </div>
-                    <span className="waterfall-running">
-                      {step.type !== 'total' && step.type !== 'result' && step.running.toLocaleString()}
-                    </span>
-                  </div>
+              <div className="chart-bars">
+                {hourlyChartData.map(h => (
+                  <button
+                    key={h.hour}
+                    className="chart-col"
+                    onMouseEnter={() => setHoveredHour(h.hour)}
+                    onMouseLeave={() => setHoveredHour(null)}
+                    style={{ opacity: h.isActive ? 1 : 0.25 }}
+                  >
+                    <span
+                      className="chart-bar"
+                      style={{
+                        height: `${(h.duty / maxDuty) * 100}%`,
+                        background: SHIFTS[h.shift].col,
+                      }}
+                    />
+                  </button>
                 ))}
               </div>
+            </div>
 
-              <div className="waterfall-summary">
-                <strong>{Math.round((STAFFING.assignments.patrol / STAFFING.total) * 100)}%</strong> of sworn officers are available for patrol duty
+            <div className="chart-row">
+              <div className="chart-label">
+                <div className="chart-title">Calls per hour</div>
+                <div className="chart-sub">peak {fmt(Math.max(...hourlyCallData))}</div>
               </div>
-            </section>
-
-            <section className="section">
-              <header className="section-header">
-                <h2>Shift Coverage</h2>
-                <p className="section-desc">
-                  Patrol officers work three shifts. Swing has the most; night the fewest.
-                </p>
-              </header>
-
-              <div className="shifts-grid">
-                {shiftData.map(shift => {
-                  const pct = (shift.officers / STAFFING.assignments.patrol) * 100;
-                  return (
-                    <div key={shift.id} className="shift-card">
-                      <div className="shift-header">
-                        <span className="shift-label">{shift.label}</span>
-                      </div>
-                      <div className="shift-value">{shift.officers}</div>
-                      <div className="shift-bar">
-                        <div className="shift-fill" style={{ width: `${pct}%` }} />
-                      </div>
-                      <div className="shift-pct">{Math.round(pct)}% of patrol</div>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-
-            <section className="section">
-              <header className="section-header">
-                <h2>Station Workload</h2>
-                <p className="section-desc">
-                  {loading ? 'Loading...' : error ? error : 'Click a station to see detailed breakdown.'}
-                </p>
-              </header>
-
-              <div className="stations-grid">
-                {districtData.map(({ district, count, officers }) => {
-                  const callsPerOfficer = officers > 0 ? Math.round(count / officers) : 0;
-                  return (
-                    <button
-                      key={district}
-                      className="station-card"
-                      onClick={() => setSelectedStation(district)}
-                    >
-                      <div className="station-name">{district}</div>
-                      <div className="station-stats">
-                        <div className="station-stat">
-                          <span className="station-stat-value">{formatNumber(count)}</span>
-                          <span className="station-stat-label">incidents</span>
-                        </div>
-                        <div className="station-stat">
-                          <span className="station-stat-value">{officers}</span>
-                          <span className="station-stat-label">officers</span>
-                        </div>
-                        <div className="station-stat highlight">
-                          <span className="station-stat-value">{callsPerOfficer}</span>
-                          <span className="station-stat-label">per officer</span>
-                        </div>
-                      </div>
-                      <div className="station-bar">
-                        <div
-                          className="station-fill"
-                          style={{ width: `${(count / (districtData[0]?.count || 1)) * 100}%` }}
-                        />
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
-          </>
-        ) : (
-          <>
-            <section className="hero-section station-hero">
-              <div className="hero-content">
-                <span className="hero-label">{selectedStation} Station</span>
-                <span className="hero-value">{STAFFING.stations[selectedStation]?.officers || 0}</span>
-                <span className="hero-sublabel">Patrol Officers Assigned</span>
-                <span className="hero-address">{STAFFING.stations[selectedStation]?.address}</span>
-              </div>
-            </section>
-
-            <section className="section">
-              <header className="section-header">
-                <h2>Station Overview</h2>
-                <p className="section-desc">
-                  {loading ? 'Loading...' : `${formatNumber(stats.total)} incidents — ${stats.incidentsPerOfficer} per officer in the selected period.`}
-                </p>
-              </header>
-
-              <div className="stats-row">
-                <div className="stat-tile">
-                  <span className="stat-label">Total Incidents</span>
-                  <span className="stat-value">{formatNumber(stats.total)}</span>
-                </div>
-                <div className="stat-tile">
-                  <span className="stat-label">Per Day</span>
-                  <span className="stat-value">{stats.perDay}</span>
-                </div>
-                <div className="stat-tile">
-                  <span className="stat-label">Per Officer</span>
-                  <span className="stat-value">{stats.incidentsPerOfficer}</span>
-                </div>
-                <div className="stat-tile">
-                  <span className="stat-label">Peak Hour</span>
-                  <span className="stat-value">{stats.peakHour?.label || '-'}</span>
-                </div>
-              </div>
-            </section>
-
-            <section className="section">
-              <header className="section-header">
-                <h2>When Calls Come In</h2>
-                <p className="section-desc">
-                  Incident volume by hour for {selectedStation} station.
-                </p>
-              </header>
-
-              <div className="chart-container">
-                <ResponsiveContainer width="100%" height={200}>
-                  <AreaChart data={hourlyData} margin={{ top: 8, right: 8, bottom: 24, left: 0 }}>
-                    <defs>
-                      <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#3987e5" stopOpacity={0.3} />
-                        <stop offset="100%" stopColor="#3987e5" stopOpacity={0.05} />
-                      </linearGradient>
-                    </defs>
-                    <XAxis
-                      dataKey="label"
-                      tick={{ fontSize: 11, fill: '#898781' }}
-                      tickLine={false}
-                      axisLine={{ stroke: '#383835' }}
-                      interval={5}
-                    />
-                    <YAxis hide />
-                    <Tooltip
-                      contentStyle={{
-                        background: '#1a1a19',
-                        border: '1px solid #2c2c2a',
-                        borderRadius: 4,
-                        fontSize: 12,
-                      }}
-                      labelStyle={{ color: '#f0efec' }}
-                      itemStyle={{ color: '#c3c2b7' }}
-                      formatter={(value) => [Number(value).toLocaleString(), 'Incidents']}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="count"
-                      stroke="#3987e5"
-                      strokeWidth={2}
-                      fill="url(#areaGradient)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-
-              <div className="shift-comparison">
-                {stats.shiftCounts.map(sc => {
-                  const stationOfficersPerShift = Math.round((STAFFING.stations[selectedStation]?.officers || 0) * (sc.officers / STAFFING.assignments.patrol));
-                  return (
-                    <div key={sc.id} className="shift-stat">
-                      <span className="shift-stat-label">{sc.label.split(' ')[0]}</span>
-                      <span className="shift-stat-value">{formatNumber(sc.incidents)}</span>
-                      <span className="shift-stat-ratio">
-                        ~{stationOfficersPerShift} officers
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-
-            <section className="section">
-              <header className="section-header">
-                <h2>Top Incident Types</h2>
-                <p className="section-desc">
-                  Most common incident categories at {selectedStation} station.
-                </p>
-              </header>
-
-              <div className="chart-container">
-                <ResponsiveContainer width="100%" height={280}>
-                  <BarChart
-                    data={topCategories}
-                    layout="vertical"
-                    margin={{ top: 0, right: 40, bottom: 0, left: 140 }}
+              <div className="chart-bars">
+                {hourlyChartData.map(h => (
+                  <button
+                    key={h.hour}
+                    className="chart-col"
+                    onMouseEnter={() => setHoveredHour(h.hour)}
+                    onMouseLeave={() => setHoveredHour(null)}
+                    style={{ opacity: h.isActive ? 1 : 0.25 }}
                   >
-                    <XAxis type="number" hide />
-                    <YAxis
-                      type="category"
-                      dataKey="category"
-                      tick={{ fontSize: 12, fill: '#c3c2b7' }}
-                      tickLine={false}
-                      axisLine={false}
-                      width={135}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        background: '#1a1a19',
-                        border: '1px solid #2c2c2a',
-                        borderRadius: 4,
-                        fontSize: 12,
+                    <span
+                      className="chart-bar"
+                      style={{
+                        height: `${h.callsHeight}%`,
+                        background: '#7d7c75',
                       }}
-                      labelStyle={{ color: '#f0efec' }}
-                      formatter={(value) => [Number(value).toLocaleString(), 'Incidents']}
-                      cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                     />
-                    <Bar dataKey="count" radius={[0, 4, 4, 0]} maxBarSize={20} fill="#3987e5" />
-                  </BarChart>
-                </ResponsiveContainer>
+                  </button>
+                ))}
               </div>
-            </section>
+            </div>
 
-            <section className="section">
-              <header className="section-header">
-                <h2>Compare to Other Stations</h2>
-              </header>
-
-              <div className="compare-grid">
-                {districtData.map(({ district, count, officers }) => {
-                  const isSelected = district === selectedStation;
-                  const callsPerOfficer = officers > 0 ? Math.round(count / officers) : 0;
-                  return (
-                    <button
-                      key={district}
-                      className={`compare-card ${isSelected ? 'selected' : ''}`}
-                      onClick={() => setSelectedStation(district)}
-                    >
-                      <span className="compare-name">{district}</span>
-                      <span className="compare-value">{callsPerOfficer}</span>
-                      <span className="compare-label">per officer</span>
-                    </button>
-                  );
-                })}
+            <div className="chart-row">
+              <div className="chart-label">
+                <div className="chart-title">Calls per officer</div>
+                <div className="chart-sub">scale 0 to {maxRatio.toFixed(1)}</div>
               </div>
-            </section>
-          </>
-        )}
-      </main>
+              <div className="chart-bars">
+                {hourlyChartData.map(h => (
+                  <button
+                    key={h.hour}
+                    className="chart-col"
+                    onMouseEnter={() => setHoveredHour(h.hour)}
+                    onMouseLeave={() => setHoveredHour(null)}
+                    style={{ opacity: h.isActive ? 1 : 0.25 }}
+                  >
+                    <span
+                      className="chart-bar"
+                      style={{
+                        height: `${(h.ratio / maxRatio) * 100}%`,
+                        background: h.ratio > 1.1 ? '#d03a39' : '#3b3a37',
+                      }}
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="chart-axis">
+              <div className="chart-label" />
+              <div className="axis-labels">
+                {HOURS.map(h => (
+                  <span key={h} className="axis-tick">
+                    {h % 3 === 0 ? hourName(h) : ''}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <footer className="footer">
+          Data from SF OpenData police incident reports. Staffing figures are illustrative.
+          Officers on duty assumes 72% of assigned officers are available per shift (accounting for days off, leave, court).
+        </footer>
+      </div>
     </div>
   );
 }
