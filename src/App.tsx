@@ -11,11 +11,12 @@ const CITYWIDE = {
   stationPatrol: 982,
   fieldOps: 22,
   dmacc: 81,
+  rtic: 30,
   partialDuty: 18,
   get cityOfficers() { return this.totalSworn - this.airport; },
   get effective() { return this.cityOfficers - this.recruits; },
   get shortage() { return this.target - this.effective; },
-  get patrolTotal() { return this.stationPatrol + this.fieldOps + this.dmacc; },
+  get patrolTotal() { return this.stationPatrol + this.fieldOps + this.dmacc + this.rtic; },
   get fullDutyPatrol() { return this.patrolTotal - this.partialDuty; },
   get otherAssignments() { return this.effective - this.patrolTotal; },
 };
@@ -36,6 +37,7 @@ const STATIONS = [
 const OTHER_UNITS = [
   { id: 'field-ops', name: 'Field Operations', capt: 3, lt: 4, sgt: 5, off: 10, staff: 22 },
   { id: 'dmacc', name: 'DMACC', capt: 1, lt: 2, sgt: 14, off: 64, staff: 81 },
+  { id: 'rtic', name: 'RTIC', capt: 1, lt: 2, sgt: 12, off: 15, staff: 30 },
 ];
 
 const PARTIAL_DUTY = [
@@ -385,10 +387,10 @@ function App() {
             <div className="district-row subtotal">
               <span className="col-name">Patrol Total</span>
               <span className="col-bar" />
-              <span className="col-rank">4</span>
-              <span className="col-rank">45</span>
-              <span className="col-rank">154</span>
-              <span className="col-rank">882</span>
+              <span className="col-rank">5</span>
+              <span className="col-rank">47</span>
+              <span className="col-rank">166</span>
+              <span className="col-rank">897</span>
               <span className="col-total">{fmt(CITYWIDE.patrolTotal)}</span>
             </div>
           </div>
