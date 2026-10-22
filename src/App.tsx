@@ -243,11 +243,13 @@ function App() {
 
             <div className="st-row st-total">
               <span className="st-name">All stations</span>
+              <span className="st-col">{stationData.reduce((s, d) => s + d.ranks.total, 0)}</span>
               <span className="st-col">{stationData.reduce((s, d) => s + d.patrolOfficers, 0)}</span>
+              <span className="st-col">{stationData.reduce((s, d) => s + d.officers.days, 0)}</span>
+              <span className="st-col">{stationData.reduce((s, d) => s + d.officers.swings, 0)}</span>
+              <span className="st-col">{stationData.reduce((s, d) => s + d.officers.mids, 0)}</span>
+              <span className="st-col">{stationData.reduce((s, d) => s + d.officers.elevens, 0)}</span>
               <span className="st-col">{stationData.reduce((s, d) => s + d.totalCalls, 0)}</span>
-              <span className="st-col">
-                {(stationData.reduce((s, d) => s + d.totalCalls, 0) / stationData.reduce((s, d) => s + d.patrolOfficers, 0)).toFixed(1)}
-              </span>
             </div>
           </div>
         </section>
