@@ -153,87 +153,81 @@ function App() {
 
                   {isExpanded && (
                     <div className="st-detail">
-                      <div className="st-detail-info">
-                        <strong>{station.ranks.total} assigned</strong> · {station.ranks.capt} Capt · {station.ranks.lt} Lt · {station.ranks.sgt} Sgt · {station.ranks.off} Off
-                      </div>
-                      <div className="st-detail-row">
-                        <table className="st-shift-table">
-                          <thead>
-                            <tr>
-                              <th>Shift</th>
-                              <th>Hours</th>
-                              <th>Officers</th>
-                              <th>Calls/hr</th>
-                              <th>A</th>
-                              <th>B</th>
-                              <th>C</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {(() => {
-                              const daysTotal = station.shiftCalls.days.A + station.shiftCalls.days.B + station.shiftCalls.days.C;
-                              const swingsTotal = station.shiftCalls.swings.A + station.shiftCalls.swings.B + station.shiftCalls.swings.C;
-                              const midsTotal = station.shiftCalls.mids.A + station.shiftCalls.mids.B + station.shiftCalls.mids.C;
-                              return (
-                                <>
-                                  <tr>
-                                    <td>Days</td>
-                                    <td>6am–4pm</td>
-                                    <td>{station.officers.days}</td>
-                                    <td>{daysTotal.toFixed(1)}</td>
-                                    <td className="st-pri-a">{station.shiftCalls.days.A.toFixed(1)}</td>
-                                    <td className="st-pri-b">{station.shiftCalls.days.B.toFixed(1)}</td>
-                                    <td>{station.shiftCalls.days.C.toFixed(1)}</td>
-                                  </tr>
-                                  <tr>
-                                    <td>Swings</td>
-                                    <td>3pm–1am</td>
-                                    <td>{station.officers.swings}</td>
-                                    <td>{swingsTotal.toFixed(1)}</td>
-                                    <td className="st-pri-a">{station.shiftCalls.swings.A.toFixed(1)}</td>
-                                    <td className="st-pri-b">{station.shiftCalls.swings.B.toFixed(1)}</td>
-                                    <td>{station.shiftCalls.swings.C.toFixed(1)}</td>
-                                  </tr>
-                                  <tr>
-                                    <td>Mids</td>
-                                    <td>9pm–7am</td>
-                                    <td>{station.officers.mids}</td>
-                                    <td>{midsTotal.toFixed(1)}</td>
-                                    <td className="st-pri-a">{station.shiftCalls.mids.A.toFixed(1)}</td>
-                                    <td className="st-pri-b">{station.shiftCalls.mids.B.toFixed(1)}</td>
-                                    <td>{station.shiftCalls.mids.C.toFixed(1)}</td>
-                                  </tr>
-                                  {station.officers.elevens > 0 && (
-                                    <tr className="st-footbeat-row">
-                                      <td>Footbeats</td>
-                                      <td>11am–9pm</td>
-                                      <td>{station.officers.elevens}</td>
-                                      <td colSpan={4} className="st-muted">don't respond to calls</td>
-                                    </tr>
-                                  )}
-                                </>
-                              );
-                            })()}
-                          </tbody>
-                        </table>
+                      <div className="st-detail-grid">
+                        <div className="st-detail-left">
+                          <div className="st-detail-info">
+                            <strong>{station.ranks.total} assigned</strong> · {station.ranks.capt} Capt · {station.ranks.lt} Lt · {station.ranks.sgt} Sgt · {station.ranks.off} Off
+                          </div>
+                          <table className="st-shift-table">
+                            <thead>
+                              <tr>
+                                <th>Shift</th>
+                                <th>Hours</th>
+                                <th>Officers</th>
+                                <th>Calls/hr</th>
+                                <th>A</th>
+                                <th>B</th>
+                                <th>C</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td>Days</td>
+                                <td>6am–4pm</td>
+                                <td>{station.officers.days}</td>
+                                <td>{(station.shiftCalls.days.A + station.shiftCalls.days.B + station.shiftCalls.days.C).toFixed(1)}</td>
+                                <td className="st-pri-a">{station.shiftCalls.days.A.toFixed(1)}</td>
+                                <td className="st-pri-b">{station.shiftCalls.days.B.toFixed(1)}</td>
+                                <td>{station.shiftCalls.days.C.toFixed(1)}</td>
+                              </tr>
+                              <tr>
+                                <td>Swings</td>
+                                <td>3pm–1am</td>
+                                <td>{station.officers.swings}</td>
+                                <td>{(station.shiftCalls.swings.A + station.shiftCalls.swings.B + station.shiftCalls.swings.C).toFixed(1)}</td>
+                                <td className="st-pri-a">{station.shiftCalls.swings.A.toFixed(1)}</td>
+                                <td className="st-pri-b">{station.shiftCalls.swings.B.toFixed(1)}</td>
+                                <td>{station.shiftCalls.swings.C.toFixed(1)}</td>
+                              </tr>
+                              <tr>
+                                <td>Mids</td>
+                                <td>9pm–7am</td>
+                                <td>{station.officers.mids}</td>
+                                <td>{(station.shiftCalls.mids.A + station.shiftCalls.mids.B + station.shiftCalls.mids.C).toFixed(1)}</td>
+                                <td className="st-pri-a">{station.shiftCalls.mids.A.toFixed(1)}</td>
+                                <td className="st-pri-b">{station.shiftCalls.mids.B.toFixed(1)}</td>
+                                <td>{station.shiftCalls.mids.C.toFixed(1)}</td>
+                              </tr>
+                              {station.officers.elevens > 0 && (
+                                <tr className="st-footbeat-row">
+                                  <td>Footbeats</td>
+                                  <td>11am–9pm</td>
+                                  <td>{station.officers.elevens}</td>
+                                  <td colSpan={4} className="st-muted">don't respond to calls</td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
                         {station.responseTimes && (
-                          <div className="st-response-section">
-                            <div className="st-response-title">Response time (30-day median)</div>
-                            <div className="st-response-grid">
-                              <div className={`st-response-box ${station.responseTimes.A.median > RESPONSE_TARGETS.A ? 'st-over' : ''}`}>
-                                <span className="st-response-priority st-pri-a">A</span>
-                                <span className="st-response-value">{station.responseTimes.A.median}m</span>
-                                <span className="st-response-target">target {RESPONSE_TARGETS.A}m</span>
+                          <div className="st-detail-right">
+                            <div className="st-response-title">Response time</div>
+                            <div className="st-response-subtitle">30-day median</div>
+                            <div className="st-response-list">
+                              <div className={`st-response-item ${station.responseTimes.A.median > RESPONSE_TARGETS.A ? 'st-over' : ''}`}>
+                                <span className="st-response-pri st-pri-a">A</span>
+                                <span className="st-response-val">{station.responseTimes.A.median}m</span>
+                                <span className="st-response-tgt">/ {RESPONSE_TARGETS.A}m</span>
                               </div>
-                              <div className={`st-response-box ${station.responseTimes.B.median > RESPONSE_TARGETS.B ? 'st-over' : ''}`}>
-                                <span className="st-response-priority st-pri-b">B</span>
-                                <span className="st-response-value">{station.responseTimes.B.median}m</span>
-                                <span className="st-response-target">target {RESPONSE_TARGETS.B}m</span>
+                              <div className={`st-response-item ${station.responseTimes.B.median > RESPONSE_TARGETS.B ? 'st-over' : ''}`}>
+                                <span className="st-response-pri st-pri-b">B</span>
+                                <span className="st-response-val">{station.responseTimes.B.median}m</span>
+                                <span className="st-response-tgt">/ {RESPONSE_TARGETS.B}m</span>
                               </div>
-                              <div className={`st-response-box ${station.responseTimes.C.median > RESPONSE_TARGETS.C ? 'st-over' : ''}`}>
-                                <span className="st-response-priority">C</span>
-                                <span className="st-response-value">{station.responseTimes.C.median}m</span>
-                                <span className="st-response-target">target {RESPONSE_TARGETS.C}m</span>
+                              <div className={`st-response-item ${station.responseTimes.C.median > RESPONSE_TARGETS.C ? 'st-over' : ''}`}>
+                                <span className="st-response-pri">C</span>
+                                <span className="st-response-val">{station.responseTimes.C.median}m</span>
+                                <span className="st-response-tgt">/ {RESPONSE_TARGETS.C}m</span>
                               </div>
                             </div>
                           </div>
