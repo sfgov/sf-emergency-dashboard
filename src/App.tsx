@@ -1,16 +1,10 @@
 import { useState, useMemo } from 'react';
-import { useDistrictCalls } from './hooks/useIncidents';
 import {
   CITYWIDE, STATION_TOTAL, BUREAUS, MODIFIED_DUTY_BREAKDOWN,
   DAILY_ON_DUTY, DAILY_TOTALS
 } from './data/staffing';
+import { CALL_DATA, getShiftCalls } from './data/calls';
 import './App.css';
-
-const STATION_CODE_MAP: Record<string, string> = {
-  CENTRAL: 'cent', SOUTHERN: 'sout', BAYVIEW: 'potr', MISSION: 'miss',
-  NORTHERN: 'nort', PARK: 'park', RICHMOND: 'rich', INGLESIDE: 'ingl',
-  TARAVAL: 'tara', TENDERLOIN: 'tend',
-};
 
 const STATION_NAMES: Record<string, string> = {
   cent: 'Central', sout: 'Southern', potr: 'Bayview', miss: 'Mission',
@@ -19,7 +13,6 @@ const STATION_NAMES: Record<string, string> = {
 };
 
 function App() {
-  const { data: callData, loading: callsLoading, error: callsError } = useDistrictCalls();
   const [expandedStation, setExpandedStation] = useState<string | null>(null);
 
   const stationData = useMemo(() => {
@@ -29,7 +22,8 @@ function App() {
       const name = STATION_NAMES[key];
       const officers = DAILY_ON_DUTY[key];
       const totalOfficers = officers.days + officers.elevens + officers.swings + officers.mids;
-      const callStats = callData.find(c => STATION_CODE_MAP[c.district] === key);
+      const callStats = CALL_DATA[key];
+      const totalCalls = callStats ? callStats.daily.A + callStats.daily.B + callStats.daily.C : 0;
       const stationInfo = BUREAUS.fieldOps.units[key];
 
       return {
@@ -38,8 +32,8 @@ function App() {
         officers,
         totalOfficers,
         calls: callStats,
-        totalCalls: callStats?.total || 0,
-        callsPerOfficer: totalOfficers > 0 && callStats ? callStats.total / totalOfficers : 0,
+        totalCalls: Math.round(totalCalls),
+        callsPerOfficer: totalOfficers > 0 ? totalCalls / totalOfficers : 0,
         ranks: {
           capt: stationInfo?.capt || 0,
           lt: stationInfo?.lt || 0,
@@ -49,7 +43,7 @@ function App() {
         },
       };
     }).sort((a, b) => b.callsPerOfficer - a.callsPerOfficer);
-  }, [callData]);
+  }, []);
 
   const bureauBreakdown = [
     { label: 'Field Operations', value: BUREAUS.fieldOps.total, detail: `${STATION_TOTAL} in stations` },
@@ -96,11 +90,8 @@ function App() {
 
         <section className="card">
           <div className="card-header">
-            <h2>Station workload: officers vs calls by shift</h2>
-            <p>
-              {callsLoading ? 'Loading call data...' : callsError ? `Error: ${callsError}` :
-                `Daily averages over last 30 days. Click to see shift breakdown (6am–4pm Days, 11am–9pm 11's, 3pm–1am Swings, 9pm–7am Mids).`}
-            </p>
+            <h2>Station workload by shift</h2>
+            <p>Officers on duty vs calls for service. Click to see hourly breakdown.</p>
           </div>
 
           <div className="station-table">
@@ -113,7 +104,7 @@ function App() {
 
             {stationData.map(station => {
               const isExpanded = expandedStation === station.key;
-              const isHighWorkload = station.callsPerOfficer > 2.5;
+              const isHighWorkload = station.callsPerOfficer > 4;
 
               return (
                 <div key={station.key} className="st-station">
@@ -126,9 +117,9 @@ function App() {
                       {station.name}
                     </span>
                     <span className="st-officers">{station.totalOfficers}</span>
-                    <span className="st-calls">{callsLoading ? '...' : station.totalCalls}</span>
+                    <span className="st-calls">{station.totalCalls}</span>
                     <span className={`st-ratio ${isHighWorkload ? 'st-ratio-high' : ''}`}>
-                      {callsLoading ? '...' : station.callsPerOfficer.toFixed(1)}
+                      {station.callsPerOfficer.toFixed(1)}
                     </span>
                   </button>
 
@@ -145,7 +136,16 @@ function App() {
                       </div>
 
                       <div className="st-detail-section">
-                        <div className="st-detail-title">By shift (typical daily on-duty)</div>
+                        <div className="st-detail-title">Calls by priority (daily avg)</div>
+                        <div className="st-priority-row">
+                          <span className="st-pri st-pri-a">Priority A: {station.calls?.daily.A || 0}</span>
+                          <span className="st-pri st-pri-b">Priority B: {station.calls?.daily.B || 0}</span>
+                          <span className="st-pri st-pri-c">Priority C: {station.calls?.daily.C || 0}</span>
+                        </div>
+                      </div>
+
+                      <div className="st-detail-section">
+                        <div className="st-detail-title">By shift</div>
                         <div className="st-detail-header">
                           <span className="st-shift-label">Shift</span>
                           <span className="st-shift-hours">Hours</span>
@@ -160,9 +160,10 @@ function App() {
                           { key: 'mids', label: 'Mids', hours: '9pm–7am', color: '#1baf7a' },
                         ].map(shift => {
                           const off = station.officers[shift.key as keyof typeof station.officers];
-                          const calls = station.calls?.byShift?.[shift.key as keyof typeof station.calls.byShift] || 0;
-                          const ratio = off > 0 ? calls / off : 0;
-                          const isShiftHigh = ratio > 3;
+                          const shiftCalls = getShiftCalls(station.key, shift.key as 'days' | 'elevens' | 'swings' | 'mids');
+                          const totalShiftCalls = shiftCalls.A + shiftCalls.B + shiftCalls.C;
+                          const ratio = off > 0 ? totalShiftCalls / off : 0;
+                          const isShiftHigh = ratio > 5;
                           return (
                             <div key={shift.key} className={`st-detail-row ${isShiftHigh ? 'st-detail-high' : ''}`}>
                               <span className="st-shift-label">
@@ -171,9 +172,9 @@ function App() {
                               </span>
                               <span className="st-shift-hours">{shift.hours}</span>
                               <span className="st-shift-officers">{off}</span>
-                              <span className="st-shift-calls">{callsLoading ? '...' : calls}</span>
+                              <span className="st-shift-calls">{Math.round(totalShiftCalls)}</span>
                               <span className={`st-shift-ratio ${isShiftHigh ? 'st-ratio-high' : ''}`}>
-                                {callsLoading ? '...' : ratio.toFixed(1)}
+                                {ratio.toFixed(1)}
                               </span>
                             </div>
                           );
@@ -188,9 +189,9 @@ function App() {
             <div className="st-row st-total">
               <span className="st-name">Total (all stations)</span>
               <span className="st-officers">{DAILY_TOTALS.total}</span>
-              <span className="st-calls">{callsLoading ? '...' : stationData.reduce((s, d) => s + d.totalCalls, 0)}</span>
+              <span className="st-calls">{stationData.reduce((s, d) => s + d.totalCalls, 0)}</span>
               <span className="st-ratio">
-                {callsLoading ? '...' : (stationData.reduce((s, d) => s + d.totalCalls, 0) / DAILY_TOTALS.total).toFixed(1)}
+                {(stationData.reduce((s, d) => s + d.totalCalls, 0) / DAILY_TOTALS.total).toFixed(1)}
               </span>
             </div>
           </div>
@@ -223,7 +224,7 @@ function App() {
         </section>
 
         <footer className="footer">
-          Data: SFPD personnel records, SF OpenData CAD calls (30-day daily average).
+          Data: SFPD personnel records, SF OpenData CAD calls (30-day daily average, Oct 2026).
         </footer>
       </div>
     </div>
