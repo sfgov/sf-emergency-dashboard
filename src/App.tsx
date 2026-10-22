@@ -353,6 +353,11 @@ function App() {
                 <span className="st-col st-muted">—</span>
               </div>
               <div className="st-dmacc-note">Does not respond to calls for service</div>
+              <div className="st-dmacc-subunits">
+                {BUREAUS.fieldOps.units.dmac.subunits.map(sub => (
+                  <span key={sub.name} className="st-subunit-tag">{sub.name}: {sub.total}</span>
+                ))}
+              </div>
             </div>
           </div>
         </section>
