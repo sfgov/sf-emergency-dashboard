@@ -258,37 +258,49 @@ function App() {
             <p>{CITYWIDE.currentStaffing.toLocaleString()} officers by bureau. Click to see unit breakdown.</p>
           </div>
 
-          <div className="bureau-breakdown">
+          <div className="bureau-table">
+            <div className="bt-header">
+              <span className="bt-name">Bureau</span>
+              <span className="bt-col">Officers</span>
+              <span className="bt-col">%</span>
+            </div>
+
             {bureauBreakdown.map(b => {
               const isExpanded = expandedBureau === b.key;
               const units = b.units ? Object.values(b.units) as Array<{name: string; total: number; capt?: number; lt?: number; sgt?: number; off?: number}> : [];
 
               return (
-                <div key={b.key} className="bb-section">
+                <div key={b.key} className="bt-bureau">
                   <button
-                    className={`bb-row bb-clickable ${isExpanded ? 'bb-expanded' : ''}`}
+                    className={`bt-row ${isExpanded ? 'bt-expanded' : ''}`}
                     onClick={() => setExpandedBureau(isExpanded ? null : b.key)}
                   >
-                    <span className="bb-label">
-                      <span className="bb-expand">{units.length > 0 ? (isExpanded ? '▼' : '▶') : ''}</span>
+                    <span className="bt-name">
+                      {units.length > 0 && <span className="bt-expand">{isExpanded ? '▼' : '▶'}</span>}
                       {b.label}
                     </span>
-                    <span className="bb-value">{b.value}</span>
-                    <span className="bb-pct">{Math.round((b.value / CITYWIDE.currentStaffing) * 100)}%</span>
+                    <span className="bt-col">{b.value}</span>
+                    <span className="bt-col">{Math.round((b.value / CITYWIDE.currentStaffing) * 100)}%</span>
                   </button>
 
                   {isExpanded && units.length > 0 && (
-                    <div className="bb-units">
+                    <div className="bt-units">
+                      <div className="bt-units-header">
+                        <span>Unit</span>
+                        <span>Capt</span>
+                        <span>Lt</span>
+                        <span>Sgt</span>
+                        <span>Off</span>
+                        <span>Total</span>
+                      </div>
                       {units.map((unit: any) => (
-                        <div key={unit.name} className="bb-unit">
-                          <span className="bb-unit-name">{unit.name}</span>
-                          <span className="bb-unit-ranks">
-                            <span className="bb-rank">{unit.capt ? `${unit.capt} Capt` : ''}</span>
-                            <span className="bb-rank">{unit.lt ? `${unit.lt} Lt` : ''}</span>
-                            <span className="bb-rank">{unit.sgt ? `${unit.sgt} Sgt` : ''}</span>
-                            <span className="bb-rank">{unit.off ? `${unit.off} Off` : ''}</span>
-                          </span>
-                          <span className="bb-unit-total">{unit.total}</span>
+                        <div key={unit.name} className="bt-unit-row">
+                          <span>{unit.name}</span>
+                          <span>{unit.capt || '—'}</span>
+                          <span>{unit.lt || '—'}</span>
+                          <span>{unit.sgt || '—'}</span>
+                          <span>{unit.off || '—'}</span>
+                          <span className="bt-unit-total">{unit.total}</span>
                         </div>
                       ))}
                     </div>
@@ -296,10 +308,11 @@ function App() {
                 </div>
               );
             })}
-            <div className="bb-row bb-total">
-              <span className="bb-label">Total</span>
-              <span className="bb-value">{CITYWIDE.currentStaffing.toLocaleString()}</span>
-              <span className="bb-pct">100%</span>
+
+            <div className="bt-row bt-total">
+              <span className="bt-name">Total</span>
+              <span className="bt-col">{CITYWIDE.currentStaffing.toLocaleString()}</span>
+              <span className="bt-col">100%</span>
             </div>
           </div>
         </section>
