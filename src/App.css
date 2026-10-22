@@ -479,10 +479,8 @@ button:focus-visible, select:focus-visible {
 }
 
 .st-detail-row {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
   font-size: 14px;
+  line-height: 1.5;
 }
 
 .st-detail-label {
@@ -491,6 +489,7 @@ button:focus-visible, select:focus-visible {
 
 .st-detail-value {
   font-weight: 700;
+  margin: 0 4px;
 }
 
 .st-detail-sub {
