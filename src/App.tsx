@@ -131,7 +131,6 @@ function App() {
                     <span className="st-col">{station.patrolOfficers}</span>
                     <span className="st-col-wide st-shift-cols">
                       <span>{station.officers.days}D</span>
-                      <span>{station.officers.elevens}E</span>
                       <span>{station.officers.swings}S</span>
                       <span>{station.officers.mids}M</span>
                     </span>
@@ -150,7 +149,7 @@ function App() {
                       </div>
 
                       <div className="st-detail-section">
-                        <div className="st-detail-title">By shift</div>
+                        <div className="st-detail-title">Patrol shifts</div>
                         <table className="st-shift-table">
                           <thead>
                             <tr>
@@ -168,12 +167,6 @@ function App() {
                               <td>{station.shiftCalls.days.toFixed(1)}</td>
                             </tr>
                             <tr>
-                              <td>11's</td>
-                              <td>11am–9pm</td>
-                              <td>{station.officers.elevens}</td>
-                              <td className="st-muted">{station.shiftCalls.elevens.toFixed(1)}*</td>
-                            </tr>
-                            <tr>
                               <td>Swings</td>
                               <td>3pm–1am</td>
                               <td>{station.officers.swings}</td>
@@ -187,8 +180,16 @@ function App() {
                             </tr>
                           </tbody>
                         </table>
-                        <div className="st-detail-note">*11's are footbeat officers—don't respond to calls for service</div>
                       </div>
+                      {station.officers.elevens > 0 && (
+                        <div className="st-detail-section">
+                          <div className="st-detail-row">
+                            <span className="st-detail-label">Footbeats (11's):</span>
+                            <span className="st-detail-value">{station.officers.elevens}/day</span>
+                            <span className="st-detail-sub">(11am–9pm, don't respond to calls)</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
