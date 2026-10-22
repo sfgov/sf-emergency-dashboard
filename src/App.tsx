@@ -139,6 +139,7 @@ function App() {
             <p>Patrol officers (excluding footbeats) vs calls for service. Click a station to see details.</p>
           </div>
 
+          <div className="table-scroll-hint">Scroll horizontally to see all columns →</div>
           <div className="station-table">
             <div className="st-header">
               <span className="st-name">Station</span>
@@ -340,6 +341,7 @@ function App() {
             <p>{CITYWIDE.currentStaffing.toLocaleString()} officers by bureau. Click to see unit breakdown.</p>
           </div>
 
+          <div className="table-scroll-hint">Scroll horizontally to see all columns →</div>
           <div className="bureau-table">
             <div className="bt-header">
               <span className="bt-name">Bureau</span>
@@ -400,7 +402,8 @@ function App() {
         </section>
 
         <footer className="footer">
-          Data: SFPD personnel records, SF OpenData CAD calls (30-day daily average, Oct 2026).
+          <p>Data sources: SFPD personnel records (staffing), SF OpenData CAD dataset (calls for service, response times).</p>
+          <p>Call data is a 30-day daily average. Response times are 30-day medians. Last updated October 2026.</p>
         </footer>
       </div>
     </div>

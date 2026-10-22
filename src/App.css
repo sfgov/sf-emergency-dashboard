@@ -1361,13 +1361,33 @@ button:focus-visible, select:focus-visible {
 }
 
 .footer {
-  font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.55;
-  max-width: 960px;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.footer p {
+  margin-bottom: 4px;
+}
+
+.footer p:last-child {
+  margin-bottom: 0;
+}
+
+.table-scroll-hint {
+  display: none;
 }
 
 @media (max-width: 900px) {
+  .table-scroll-hint {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    font-style: italic;
+  }
   .app {
     padding: 16px;
   }
