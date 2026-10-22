@@ -225,7 +225,7 @@ button:focus-visible, select:focus-visible {
 
 .bb-row {
   display: grid;
-  grid-template-columns: 140px 1fr 50px 50px;
+  grid-template-columns: 1fr 60px 50px;
   gap: 12px;
   padding: 8px 12px;
   background: var(--bg-page);

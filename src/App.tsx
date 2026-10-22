@@ -209,7 +209,7 @@ function App() {
         <section className="card">
           <div className="card-header">
             <h2>Where officers are assigned</h2>
-            <p>{CITYWIDE.fullDuty.toLocaleString()} full duty officers by bureau. Click to see unit breakdown.</p>
+            <p>{CITYWIDE.currentStaffing.toLocaleString()} officers by bureau. Click to see unit breakdown.</p>
           </div>
 
           <div className="bureau-breakdown">
@@ -227,11 +227,8 @@ function App() {
                       <span className="bb-expand">{units.length > 0 ? (isExpanded ? '▼' : '▶') : ''}</span>
                       {b.label}
                     </span>
-                    <span className="bb-bar">
-                      <span className="bb-fill" style={{ width: `${(b.value / CITYWIDE.fullDuty) * 100}%` }} />
-                    </span>
                     <span className="bb-value">{b.value}</span>
-                    <span className="bb-pct">{Math.round((b.value / CITYWIDE.fullDuty) * 100)}%</span>
+                    <span className="bb-pct">{Math.round((b.value / CITYWIDE.currentStaffing) * 100)}%</span>
                   </button>
 
                   {isExpanded && units.length > 0 && (
@@ -255,8 +252,7 @@ function App() {
             })}
             <div className="bb-row bb-total">
               <span className="bb-label">Total</span>
-              <span className="bb-bar" />
-              <span className="bb-value">{CITYWIDE.fullDuty.toLocaleString()}</span>
+              <span className="bb-value">{CITYWIDE.currentStaffing.toLocaleString()}</span>
               <span className="bb-pct">100%</span>
             </div>
           </div>
