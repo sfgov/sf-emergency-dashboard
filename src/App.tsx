@@ -19,7 +19,7 @@ const STATION_NAMES: Record<string, string> = {
 };
 
 function App() {
-  const { data: callData, loading: callsLoading } = useDistrictCalls();
+  const { data: callData, loading: callsLoading, error: callsError } = useDistrictCalls();
   const [expandedStation, setExpandedStation] = useState<string | null>(null);
 
   const stationData = useMemo(() => {
@@ -30,6 +30,7 @@ function App() {
       const officers = DAILY_ON_DUTY[key];
       const totalOfficers = officers.days + officers.elevens + officers.swings + officers.mids;
       const callStats = callData.find(c => STATION_CODE_MAP[c.district] === key);
+      const stationInfo = BUREAUS.fieldOps.units[key];
 
       return {
         key,
@@ -39,12 +40,19 @@ function App() {
         calls: callStats,
         totalCalls: callStats?.total || 0,
         callsPerOfficer: totalOfficers > 0 && callStats ? callStats.total / totalOfficers : 0,
+        ranks: {
+          capt: stationInfo?.capt || 0,
+          lt: stationInfo?.lt || 0,
+          sgt: stationInfo?.sgt || 0,
+          off: stationInfo?.off || 0,
+          total: stationInfo?.total || 0,
+        },
       };
     }).sort((a, b) => b.callsPerOfficer - a.callsPerOfficer);
   }, [callData]);
 
   const bureauBreakdown = [
-    { label: 'Field Operations', value: BUREAUS.fieldOps.total, detail: `${STATION_TOTAL} stations` },
+    { label: 'Field Operations', value: BUREAUS.fieldOps.total, detail: `${STATION_TOTAL} in stations` },
     { label: 'Investigations', value: BUREAUS.investigations.total },
     { label: 'Airport', value: BUREAUS.airport.total },
     { label: 'Special Ops', value: BUREAUS.specialOps.total },
@@ -80,41 +88,19 @@ function App() {
               <span className="wf-value">{CITYWIDE.fullDuty.toLocaleString()}</span>
             </div>
             <div className="wf-row wf-note">
-              <span className="wf-label">+ Modified duty (not counted above)</span>
-              <span className="wf-value">{MODIFIED_DUTY_BREAKDOWN.total}</span>
-            </div>
-          </div>
-
-          <div className="section-divider" />
-
-          <div className="card-header">
-            <h2>Where officers are assigned</h2>
-          </div>
-
-          <div className="bureau-breakdown">
-            {bureauBreakdown.map(b => (
-              <div key={b.label} className="bb-row">
-                <span className="bb-label">{b.label}</span>
-                <span className="bb-bar">
-                  <span className="bb-fill" style={{ width: `${(b.value / CITYWIDE.fullDuty) * 100}%` }} />
-                </span>
-                <span className="bb-value">{b.value}</span>
-                <span className="bb-pct">{Math.round((b.value / CITYWIDE.fullDuty) * 100)}%</span>
-              </div>
-            ))}
-            <div className="bb-row bb-total">
-              <span className="bb-label">Total</span>
-              <span className="bb-bar" />
-              <span className="bb-value">{CITYWIDE.fullDuty.toLocaleString()}</span>
-              <span className="bb-pct">100%</span>
+              <span className="wf-label">+ {MODIFIED_DUTY_BREAKDOWN.total} modified duty</span>
+              <span className="wf-value">{CITYWIDE.totalSworn.toLocaleString()} total</span>
             </div>
           </div>
         </section>
 
         <section className="card">
           <div className="card-header">
-            <h2>Station workload: officers vs calls</h2>
-            <p>Click a station to see shift breakdown. Sorted by calls per officer (highest workload first).</p>
+            <h2>Station workload: officers vs calls by shift</h2>
+            <p>
+              {callsLoading ? 'Loading call data...' : callsError ? `Error: ${callsError}` :
+                `Daily averages over last 30 days. Click to see shift breakdown (6am–4pm Days, 11am–9pm 11's, 3pm–1am Swings, 9pm–7am Mids).`}
+            </p>
           </div>
 
           <div className="station-table">
@@ -148,38 +134,51 @@ function App() {
 
                   {isExpanded && (
                     <div className="st-detail">
-                      <div className="st-detail-header">
-                        <span className="st-shift-label">Shift</span>
-                        <span className="st-shift-hours">Hours</span>
-                        <span className="st-shift-officers">Officers</span>
-                        <span className="st-shift-calls">Calls</span>
-                        <span className="st-shift-ratio">Per officer</span>
+                      <div className="st-detail-section">
+                        <div className="st-detail-title">Assigned personnel ({station.ranks.total} full duty)</div>
+                        <div className="st-ranks">
+                          <span className="st-rank">Capt: {station.ranks.capt}</span>
+                          <span className="st-rank">Lt: {station.ranks.lt}</span>
+                          <span className="st-rank">Sgt: {station.ranks.sgt}</span>
+                          <span className="st-rank">Officers: {station.ranks.off}</span>
+                        </div>
                       </div>
-                      {[
-                        { key: 'days', label: 'Days', hours: '6am–4pm', color: '#2a78d6' },
-                        { key: 'elevens', label: "11's", hours: '11am–9pm', color: '#9333ea' },
-                        { key: 'swings', label: 'Swings', hours: '3pm–1am', color: '#eb6834' },
-                        { key: 'mids', label: 'Mids', hours: '9pm–7am', color: '#1baf7a' },
-                      ].map(shift => {
-                        const off = station.officers[shift.key as keyof typeof station.officers];
-                        const calls = station.calls?.byShift?.[shift.key as keyof typeof station.calls.byShift] || 0;
-                        const ratio = off > 0 ? calls / off : 0;
-                        const isShiftHigh = ratio > 3;
-                        return (
-                          <div key={shift.key} className={`st-detail-row ${isShiftHigh ? 'st-detail-high' : ''}`}>
-                            <span className="st-shift-label">
-                              <span className="st-shift-dot" style={{ background: shift.color }} />
-                              {shift.label}
-                            </span>
-                            <span className="st-shift-hours">{shift.hours}</span>
-                            <span className="st-shift-officers">{off}</span>
-                            <span className="st-shift-calls">{callsLoading ? '...' : calls}</span>
-                            <span className={`st-shift-ratio ${isShiftHigh ? 'st-ratio-high' : ''}`}>
-                              {callsLoading ? '...' : ratio.toFixed(1)}
-                            </span>
-                          </div>
-                        );
-                      })}
+
+                      <div className="st-detail-section">
+                        <div className="st-detail-title">By shift (typical daily on-duty)</div>
+                        <div className="st-detail-header">
+                          <span className="st-shift-label">Shift</span>
+                          <span className="st-shift-hours">Hours</span>
+                          <span className="st-shift-officers">Officers</span>
+                          <span className="st-shift-calls">Calls</span>
+                          <span className="st-shift-ratio">Per officer</span>
+                        </div>
+                        {[
+                          { key: 'days', label: 'Days', hours: '6am–4pm', color: '#2a78d6' },
+                          { key: 'elevens', label: "11's", hours: '11am–9pm', color: '#9333ea' },
+                          { key: 'swings', label: 'Swings', hours: '3pm–1am', color: '#eb6834' },
+                          { key: 'mids', label: 'Mids', hours: '9pm–7am', color: '#1baf7a' },
+                        ].map(shift => {
+                          const off = station.officers[shift.key as keyof typeof station.officers];
+                          const calls = station.calls?.byShift?.[shift.key as keyof typeof station.calls.byShift] || 0;
+                          const ratio = off > 0 ? calls / off : 0;
+                          const isShiftHigh = ratio > 3;
+                          return (
+                            <div key={shift.key} className={`st-detail-row ${isShiftHigh ? 'st-detail-high' : ''}`}>
+                              <span className="st-shift-label">
+                                <span className="st-shift-dot" style={{ background: shift.color }} />
+                                {shift.label}
+                              </span>
+                              <span className="st-shift-hours">{shift.hours}</span>
+                              <span className="st-shift-officers">{off}</span>
+                              <span className="st-shift-calls">{callsLoading ? '...' : calls}</span>
+                              <span className={`st-shift-ratio ${isShiftHigh ? 'st-ratio-high' : ''}`}>
+                                {callsLoading ? '...' : ratio.toFixed(1)}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -193,6 +192,32 @@ function App() {
               <span className="st-ratio">
                 {callsLoading ? '...' : (stationData.reduce((s, d) => s + d.totalCalls, 0) / DAILY_TOTALS.total).toFixed(1)}
               </span>
+            </div>
+          </div>
+        </section>
+
+        <section className="card">
+          <div className="card-header">
+            <h2>Where officers are assigned</h2>
+            <p>{CITYWIDE.fullDuty.toLocaleString()} full duty officers by bureau</p>
+          </div>
+
+          <div className="bureau-breakdown">
+            {bureauBreakdown.map(b => (
+              <div key={b.label} className="bb-row">
+                <span className="bb-label">{b.label}</span>
+                <span className="bb-bar">
+                  <span className="bb-fill" style={{ width: `${(b.value / CITYWIDE.fullDuty) * 100}%` }} />
+                </span>
+                <span className="bb-value">{b.value}</span>
+                <span className="bb-pct">{Math.round((b.value / CITYWIDE.fullDuty) * 100)}%</span>
+              </div>
+            ))}
+            <div className="bb-row bb-total">
+              <span className="bb-label">Total</span>
+              <span className="bb-bar" />
+              <span className="bb-value">{CITYWIDE.fullDuty.toLocaleString()}</span>
+              <span className="bb-pct">100%</span>
             </div>
           </div>
         </section>

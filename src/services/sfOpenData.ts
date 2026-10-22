@@ -1,7 +1,7 @@
 import type { Incident, PoliceIncident } from '../types/incidents';
 import { subDays, format } from 'date-fns';
 
-const SF_DATA_BASE = 'https://data.sfgov.org/resource';
+const SF_DATA_BASE = 'https://data.sf.gov/resource';
 const POLICE_DATASET = 'wg3w-h783';
 const CAD_DATASET = '2zdj-bwza';
 
