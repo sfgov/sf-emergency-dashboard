@@ -1,69 +1,37 @@
 import { useState, useMemo } from 'react';
 import { useIncidents, useResponseTimes } from './hooks/useIncidents';
 import type { TimeRange } from './services/sfOpenData';
+import { CITYWIDE, BUREAUS, STATIONS as STATION_KEYS, STATION_TOTAL, MODIFIED_DUTY_BREAKDOWN } from './data/staffing';
 import './App.css';
 
-const CITYWIDE = {
-  target: 2257,
-  totalSworn: 1934,
-  airport: 134,
-  recruits: 84,
-  stationPatrol: 982,
-  fieldOps: 22,
-  dmacc: 81,
-  rtic: 30,
-  svu: 34,
-  partialDuty: 18,
-  get cityOfficers() { return this.totalSworn - this.airport; },
-  get effective() { return this.cityOfficers - this.recruits; },
-  get shortage() { return this.target - this.effective; },
-  get patrolTotal() { return this.stationPatrol + this.fieldOps + this.dmacc + this.rtic + this.svu; },
-  get fullDutyPatrol() { return this.patrolTotal - this.partialDuty; },
-  get otherAssignments() { return this.effective - this.patrolTotal; },
-};
+const STATIONS = STATION_KEYS.map(key => {
+  const unit = BUREAUS.fieldOps.units[key];
+  return {
+    id: key,
+    name: unit.name,
+    capt: unit.capt || 0,
+    lt: unit.lt || 0,
+    sgt: unit.sgt || 0,
+    off: unit.off || 0,
+    staff: unit.total,
+  };
+});
 
-const STATIONS = [
-  { id: 'central', name: 'Central', capt: 0, lt: 5, sgt: 14, off: 86, staff: 105 },
-  { id: 'southern', name: 'Southern', capt: 0, lt: 5, sgt: 17, off: 113, staff: 135 },
-  { id: 'bayview', name: 'Bayview', capt: 0, lt: 3, sgt: 12, off: 83, staff: 98 },
-  { id: 'mission', name: 'Mission', capt: 0, lt: 5, sgt: 15, off: 104, staff: 124 },
-  { id: 'northern', name: 'Northern', capt: 0, lt: 3, sgt: 14, off: 87, staff: 104 },
-  { id: 'park', name: 'Park', capt: 0, lt: 3, sgt: 10, off: 51, staff: 64 },
-  { id: 'richmond', name: 'Richmond', capt: 0, lt: 4, sgt: 12, off: 53, staff: 69 },
-  { id: 'ingleside', name: 'Ingleside', capt: 0, lt: 3, sgt: 14, off: 75, staff: 92 },
-  { id: 'taraval', name: 'Taraval', capt: 0, lt: 4, sgt: 13, off: 62, staff: 79 },
-  { id: 'tenderloin', name: 'Tenderloin', capt: 0, lt: 4, sgt: 14, off: 94, staff: 112 },
+const OTHER_FIELD_OPS = [
+  { id: 'dmac', ...BUREAUS.fieldOps.units.dmac },
+  { id: 'fob', ...BUREAUS.fieldOps.units.fob },
+  { id: 'ced', ...BUREAUS.fieldOps.units.ced },
 ];
 
-const OTHER_UNITS = [
-  { id: 'field-ops', name: 'Field Operations', capt: 3, lt: 4, sgt: 5, off: 10, staff: 22 },
-  { id: 'dmacc', name: 'DMACC', capt: 1, lt: 2, sgt: 14, off: 64, staff: 81 },
-  { id: 'rtic', name: 'RTIC', capt: 1, lt: 2, sgt: 12, off: 15, staff: 30 },
-  { id: 'svu', name: 'SVU', capt: 1, lt: 1, sgt: 30, off: 2, staff: 34 },
+const NON_PATROL_BUREAUS = [
+  { id: 'investigations', name: 'Investigations', total: BUREAUS.investigations.total },
+  { id: 'specialOps', name: 'Special Operations', total: BUREAUS.specialOps.total },
+  { id: 'admin', name: 'Administration', total: BUREAUS.admin.total },
+  { id: 'chiefOfStaff', name: 'Chief of Staff', total: BUREAUS.chiefOfStaff.total },
+  { id: 'chiefsOffice', name: "Chief's Office", total: BUREAUS.chiefsOffice.total },
 ];
 
-const NON_PATROL = {
-  investigations: { name: 'Investigations', staff: 0 },
-  admin: { name: 'Administration', staff: 0 },
-  specialOps: { name: 'Special Operations', staff: 0 },
-  chiefStaff: { name: 'Chief of Staff', staff: 0 },
-  chiefsOffice: { name: 'Chief\'s Office', staff: 0 },
-  medicalLeave: { name: 'Medical Leave', staff: 0 },
-  total: 580,
-};
-
-const PARTIAL_DUTY = [
-  { location: 'Northern', count: 4 },
-  { location: 'Field Ops B', count: 5 },
-  { location: 'Park', count: 2 },
-  { location: 'Central', count: 2 },
-  { location: 'Port', count: 1 },
-  { location: 'Taraval', count: 1 },
-  { location: 'Southern', count: 1 },
-  { location: 'Mission', count: 1 },
-  { location: 'DMACC', count: 1 },
-];
-const PARTIAL_DUTY_TOTAL = PARTIAL_DUTY.reduce((sum, p) => sum + p.count, 0);
+const NON_PATROL_TOTAL = NON_PATROL_BUREAUS.reduce((sum, b) => sum + b.total, 0);
 
 const DISTRICTS = STATIONS;
 
@@ -252,27 +220,27 @@ function App() {
           <div className="kpi-card">
             <div className="kpi-label">Total sworn</div>
             <div className="kpi-value">{fmt(CITYWIDE.totalSworn)}</div>
-            <div className="kpi-sub">{fmt(CITYWIDE.airport)} airport, {fmt(CITYWIDE.recruits)} recruits</div>
+            <div className="kpi-sub">all ranks, all statuses</div>
           </div>
           <div className="kpi-card">
-            <div className="kpi-label">City officers (non-airport)</div>
-            <div className="kpi-value">{fmt(CITYWIDE.effective)}</div>
-            <div className="kpi-sub">{fmt(CITYWIDE.cityOfficers)} minus {fmt(CITYWIDE.recruits)} recruits</div>
+            <div className="kpi-label">Modified duty</div>
+            <div className="kpi-value">−{fmt(MODIFIED_DUTY_BREAKDOWN.total)}</div>
+            <div className="kpi-sub">{fmt(MODIFIED_DUTY_BREAKDOWN.medicalLeave)} medical, {fmt(MODIFIED_DUTY_BREAKDOWN.otherModified)} other</div>
+          </div>
+          <div className="kpi-card">
+            <div className="kpi-label">Full duty sworn</div>
+            <div className="kpi-value">{fmt(CITYWIDE.fullDuty)}</div>
+            <div className="kpi-sub">+ {fmt(CITYWIDE.recruits)} recruits in training</div>
           </div>
           <div className="kpi-card inverted">
-            <div className="kpi-label">Shortage</div>
+            <div className="kpi-label">Shortage vs target</div>
             <div className="kpi-value">−{fmt(CITYWIDE.shortage)}</div>
-            <div className="kpi-sub">{Math.round((CITYWIDE.shortage / CITYWIDE.target) * 100)}% below target</div>
+            <div className="kpi-sub">{CITYWIDE.shortagePercent}% below authorized</div>
           </div>
           <div className="kpi-card">
-            <div className="kpi-label">Patrol assigned</div>
-            <div className="kpi-value">{fmt(CITYWIDE.patrolTotal)}</div>
-            <div className="kpi-sub">~{SHIFT_TOTALS.total} on duty daily</div>
-          </div>
-          <div className="kpi-card">
-            <div className="kpi-label">Non-patrol</div>
-            <div className="kpi-value">~{fmt(NON_PATROL.total)}</div>
-            <div className="kpi-sub">Investigations, Admin, Special Ops, etc.</div>
+            <div className="kpi-label">Field Operations</div>
+            <div className="kpi-value">{fmt(BUREAUS.fieldOps.total)}</div>
+            <div className="kpi-sub">{fmt(STATION_TOTAL)} in stations</div>
           </div>
           <div className="kpi-card">
             <div className="kpi-label">Calls for service</div>
@@ -338,7 +306,7 @@ function App() {
         <section className="card" aria-label="Officers by district">
           <div className="card-header">
             <h2>Station staffing by rank</h2>
-            <p>Lieutenants, sergeants, and officers assigned to each district station. Total: {fmt(CITYWIDE.stationPatrol)} patrol personnel.</p>
+            <p>Lieutenants, sergeants, and officers assigned to each district station. Total: {fmt(STATION_TOTAL)} patrol personnel.</p>
           </div>
 
           <div className="legend-row">
@@ -392,72 +360,70 @@ function App() {
             <div className="district-row subtotal">
               <span className="col-name">Station Total</span>
               <span className="col-bar" />
-              <span className="col-rank">39</span>
-              <span className="col-rank">135</span>
-              <span className="col-rank">808</span>
-              <span className="col-total">{fmt(CITYWIDE.stationPatrol)}</span>
+              <span className="col-rank">{STATIONS.reduce((s, d) => s + d.lt, 0)}</span>
+              <span className="col-rank">{STATIONS.reduce((s, d) => s + d.sgt, 0)}</span>
+              <span className="col-rank">{STATIONS.reduce((s, d) => s + d.off, 0)}</span>
+              <span className="col-total">{fmt(STATION_TOTAL)}</span>
             </div>
           </div>
 
           <div className="section-divider" />
 
           <div className="card-header">
-            <h2>Other patrol units</h2>
+            <h2>Other Field Operations</h2>
+            <p>DMACC, FOB HQ, and CED units within Field Operations Bureau.</p>
           </div>
 
           <div className="district-table">
             <div className="district-header">
               <span className="col-name" />
               <span className="col-bar" />
-              <span className="col-rank">Capt</span>
               <span className="col-rank">Lt</span>
               <span className="col-rank">Sgt</span>
               <span className="col-rank">Off</span>
               <span className="col-total">Total</span>
             </div>
-            {OTHER_UNITS.map(unit => (
+            {OTHER_FIELD_OPS.map(unit => (
               <div key={unit.id} className="district-row">
                 <span className="col-name">{unit.name}</span>
                 <span className="col-bar">
                   <span className="bar-track">
-                    <span className="bar-segment" style={{ width: `${(unit.staff / 135) * 100}%`, background: '#6f6e68' }} />
+                    <span className="bar-segment" style={{ width: `${(unit.total / 80) * 100}%`, background: '#6f6e68' }} />
                   </span>
                 </span>
-                <span className="col-rank">{unit.capt}</span>
-                <span className="col-rank">{unit.lt}</span>
-                <span className="col-rank">{unit.sgt}</span>
-                <span className="col-rank">{unit.off}</span>
-                <span className="col-total">{unit.staff}</span>
+                <span className="col-rank">{unit.lt || 0}</span>
+                <span className="col-rank">{unit.sgt || 0}</span>
+                <span className="col-rank">{unit.off || 0}</span>
+                <span className="col-total">{unit.total}</span>
               </div>
             ))}
             <div className="district-row subtotal">
-              <span className="col-name">Patrol Total</span>
+              <span className="col-name">Field Ops Total</span>
               <span className="col-bar" />
-              <span className="col-rank">6</span>
-              <span className="col-rank">48</span>
-              <span className="col-rank">196</span>
-              <span className="col-rank">899</span>
-              <span className="col-total">{fmt(CITYWIDE.patrolTotal)}</span>
+              <span className="col-rank" />
+              <span className="col-rank" />
+              <span className="col-rank" />
+              <span className="col-total">{fmt(BUREAUS.fieldOps.total)}</span>
             </div>
           </div>
 
           <div className="section-divider" />
 
           <div className="card-header">
-            <h2>Partial / modified duty</h2>
-            <p>Officers on temporary modified duty assignments. These are included in station totals above.</p>
+            <h2>Non-patrol bureaus</h2>
+            <p>Investigations, Special Operations, Administration, and leadership.</p>
           </div>
 
           <div className="partial-duty-grid">
-            {PARTIAL_DUTY.map(p => (
-              <div key={p.location} className="partial-duty-item">
-                <span className="partial-location">{p.location}</span>
-                <span className="partial-count">{p.count}</span>
+            {NON_PATROL_BUREAUS.map(b => (
+              <div key={b.id} className="partial-duty-item">
+                <span className="partial-location">{b.name}</span>
+                <span className="partial-count">{b.total}</span>
               </div>
             ))}
             <div className="partial-duty-item total">
               <span className="partial-location">Total</span>
-              <span className="partial-count">{PARTIAL_DUTY_TOTAL}</span>
+              <span className="partial-count">{NON_PATROL_TOTAL}</span>
             </div>
           </div>
         </section>
