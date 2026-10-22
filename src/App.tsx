@@ -12,20 +12,32 @@ const STATION_NAMES: Record<string, string> = {
 };
 
 function getShiftCallsPerHour(calls: StationCalls | undefined) {
-  if (!calls) return { days: 0, elevens: 0, swings: 0, mids: 0 };
-  const h = calls.byHour;
-  const sum = (start: number, end: number) => {
-    let total = 0;
-    for (let i = start; i < end; i++) {
-      total += h[i].A + h[i].B + h[i].C;
-    }
-    return total;
+  if (!calls) return {
+    days: { A: 0, B: 0, C: 0 },
+    swings: { A: 0, B: 0, C: 0 },
+    mids: { A: 0, B: 0, C: 0 },
   };
+  const h = calls.byHour;
+  const sumByPriority = (start: number, end: number) => {
+    let A = 0, B = 0, C = 0;
+    for (let i = start; i < end; i++) {
+      A += h[i].A;
+      B += h[i].B;
+      C += h[i].C;
+    }
+    return { A, B, C };
+  };
+  const addRanges = (r1: {A:number,B:number,C:number}, r2: {A:number,B:number,C:number}) => ({
+    A: r1.A + r2.A, B: r1.B + r2.B, C: r1.C + r2.C
+  });
+  const divide = (r: {A:number,B:number,C:number}, n: number) => ({
+    A: r.A / n, B: r.B / n, C: r.C / n
+  });
+
   return {
-    days: (sum(6, 16)) / 10,      // 6am-4pm
-    elevens: (sum(11, 21)) / 10,  // 11am-9pm
-    swings: (sum(15, 24) + sum(0, 1)) / 10,  // 3pm-1am
-    mids: (sum(21, 24) + sum(0, 7)) / 10,    // 9pm-7am
+    days: divide(sumByPriority(6, 16), 10),
+    swings: divide(addRanges(sumByPriority(15, 24), sumByPriority(0, 1)), 10),
+    mids: divide(addRanges(sumByPriority(21, 24), sumByPriority(0, 7)), 10),
   };
 }
 
@@ -148,7 +160,15 @@ function App() {
                             <th>Shift</th>
                             <th>Hours</th>
                             <th>Officers</th>
-                            <th>Calls/hr</th>
+                            <th colSpan={3} className="st-calls-header">Calls/hr by priority</th>
+                          </tr>
+                          <tr className="st-priority-row">
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th>A</th>
+                            <th>B</th>
+                            <th>C</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -156,26 +176,32 @@ function App() {
                             <td>Days</td>
                             <td>6am–4pm</td>
                             <td>{station.officers.days}</td>
-                            <td>{station.shiftCalls.days.toFixed(1)}</td>
+                            <td className="st-pri-a">{station.shiftCalls.days.A.toFixed(1)}</td>
+                            <td className="st-pri-b">{station.shiftCalls.days.B.toFixed(1)}</td>
+                            <td>{station.shiftCalls.days.C.toFixed(1)}</td>
                           </tr>
                           <tr>
                             <td>Swings</td>
                             <td>3pm–1am</td>
                             <td>{station.officers.swings}</td>
-                            <td>{station.shiftCalls.swings.toFixed(1)}</td>
+                            <td className="st-pri-a">{station.shiftCalls.swings.A.toFixed(1)}</td>
+                            <td className="st-pri-b">{station.shiftCalls.swings.B.toFixed(1)}</td>
+                            <td>{station.shiftCalls.swings.C.toFixed(1)}</td>
                           </tr>
                           <tr>
                             <td>Mids</td>
                             <td>9pm–7am</td>
                             <td>{station.officers.mids}</td>
-                            <td>{station.shiftCalls.mids.toFixed(1)}</td>
+                            <td className="st-pri-a">{station.shiftCalls.mids.A.toFixed(1)}</td>
+                            <td className="st-pri-b">{station.shiftCalls.mids.B.toFixed(1)}</td>
+                            <td>{station.shiftCalls.mids.C.toFixed(1)}</td>
                           </tr>
                           {station.officers.elevens > 0 && (
                             <tr className="st-footbeat-row">
                               <td>Footbeats</td>
                               <td>11am–9pm</td>
                               <td>{station.officers.elevens}</td>
-                              <td className="st-muted">—</td>
+                              <td colSpan={3} className="st-muted">don't respond to calls</td>
                             </tr>
                           )}
                         </tbody>
