@@ -139,57 +139,47 @@ function App() {
 
                   {isExpanded && (
                     <div className="st-detail">
-                      <div className="st-detail-section">
-                        <div className="st-detail-title">Assigned</div>
-                        <div className="st-detail-row">
-                          <span className="st-detail-label">Total full duty:</span>
-                          <span className="st-detail-value">{station.ranks.total}</span>
-                          <span className="st-detail-sub">({station.ranks.capt} Capt · {station.ranks.lt} Lt · {station.ranks.sgt} Sgt · {station.ranks.off} Off)</span>
-                        </div>
+                      <div className="st-detail-info">
+                        <strong>{station.ranks.total} assigned</strong> · {station.ranks.capt} Capt · {station.ranks.lt} Lt · {station.ranks.sgt} Sgt · {station.ranks.off} Off
                       </div>
-
-                      <div className="st-detail-section">
-                        <div className="st-detail-title">Patrol shifts</div>
-                        <table className="st-shift-table">
-                          <thead>
-                            <tr>
-                              <th>Shift</th>
-                              <th>Hours</th>
-                              <th>Officers/day</th>
-                              <th>Calls/hr</th>
+                      <table className="st-shift-table">
+                        <thead>
+                          <tr>
+                            <th>Shift</th>
+                            <th>Hours</th>
+                            <th>Officers</th>
+                            <th>Calls/hr</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>Days</td>
+                            <td>6am–4pm</td>
+                            <td>{station.officers.days}</td>
+                            <td>{station.shiftCalls.days.toFixed(1)}</td>
+                          </tr>
+                          <tr>
+                            <td>Swings</td>
+                            <td>3pm–1am</td>
+                            <td>{station.officers.swings}</td>
+                            <td>{station.shiftCalls.swings.toFixed(1)}</td>
+                          </tr>
+                          <tr>
+                            <td>Mids</td>
+                            <td>9pm–7am</td>
+                            <td>{station.officers.mids}</td>
+                            <td>{station.shiftCalls.mids.toFixed(1)}</td>
+                          </tr>
+                          {station.officers.elevens > 0 && (
+                            <tr className="st-footbeat-row">
+                              <td>Footbeats</td>
+                              <td>11am–9pm</td>
+                              <td>{station.officers.elevens}</td>
+                              <td className="st-muted">—</td>
                             </tr>
-                          </thead>
-                          <tbody>
-                            <tr>
-                              <td>Days</td>
-                              <td>6am–4pm</td>
-                              <td>{station.officers.days}</td>
-                              <td>{station.shiftCalls.days.toFixed(1)}</td>
-                            </tr>
-                            <tr>
-                              <td>Swings</td>
-                              <td>3pm–1am</td>
-                              <td>{station.officers.swings}</td>
-                              <td>{station.shiftCalls.swings.toFixed(1)}</td>
-                            </tr>
-                            <tr>
-                              <td>Mids</td>
-                              <td>9pm–7am</td>
-                              <td>{station.officers.mids}</td>
-                              <td>{station.shiftCalls.mids.toFixed(1)}</td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                      {station.officers.elevens > 0 && (
-                        <div className="st-detail-section">
-                          <div className="st-detail-row">
-                            <span className="st-detail-label">Footbeats (11's):</span>
-                            <span className="st-detail-value">{station.officers.elevens}/day</span>
-                            <span className="st-detail-sub">(11am–9pm, don't respond to calls)</span>
-                          </div>
-                        </div>
-                      )}
+                          )}
+                        </tbody>
+                      </table>
                     </div>
                   )}
                 </div>
