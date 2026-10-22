@@ -82,6 +82,73 @@ export const MODIFIED_DUTY_BREAKDOWN = {
   total: 171,
 };
 
+export const SHIFTS = {
+  days:   { name: 'Days',   start: 6,  end: 16, color: '#2a78d6', description: 'Sector patrol' },
+  elevens:{ name: "11's",   start: 11, end: 21, color: '#9333ea', description: 'Footbeat' },
+  swings: { name: 'Swings', start: 15, end: 1,  color: '#eb6834', description: 'Sector patrol' },
+  mids:   { name: 'Mids',   start: 21, end: 7,  color: '#1baf7a', description: 'Sector patrol' },
+} as const;
+
+export const DAILY_ON_DUTY = {
+  cent: { days: 7,  elevens: 10, swings: 11, mids: 12 },
+  sout: { days: 22, elevens: 5,  swings: 17, mids: 14 },
+  potr: { days: 11, elevens: 2,  swings: 15, mids: 14 },
+  miss: { days: 18, elevens: 5,  swings: 11, mids: 9 },
+  nort: { days: 20, elevens: 3,  swings: 14, mids: 13 },
+  park: { days: 6,  elevens: 4,  swings: 7,  mids: 10 },
+  rich: { days: 10, elevens: 1,  swings: 7,  mids: 8 },
+  ingl: { days: 10, elevens: 2,  swings: 9,  mids: 13 },
+  tara: { days: 8,  elevens: 2,  swings: 15, mids: 7 },
+  tend: { days: 11, elevens: 10, swings: 9,  mids: 14 },
+  dmac: { days: 11, elevens: 18, swings: 1,  mids: 4 },
+} as const;
+
+function calcShiftAssignments(stationKey: keyof typeof DAILY_ON_DUTY) {
+  const daily = DAILY_ON_DUTY[stationKey];
+  const unit = BUREAUS_FULL_DUTY.fieldOps.units[stationKey];
+  const officers = unit.off || 0;
+  const dailyTotal = daily.days + daily.elevens + daily.swings + daily.mids;
+
+  if (dailyTotal === 0) return { days: 0, elevens: 0, swings: 0, mids: 0, total: officers };
+
+  const days = Math.round(officers * (daily.days / dailyTotal));
+  const elevens = Math.round(officers * (daily.elevens / dailyTotal));
+  const swings = Math.round(officers * (daily.swings / dailyTotal));
+  const mids = officers - days - elevens - swings;
+
+  return { days, elevens, swings, mids, total: officers };
+}
+
+export const SHIFT_ASSIGNMENTS = {
+  cent: calcShiftAssignments('cent'),
+  sout: calcShiftAssignments('sout'),
+  potr: calcShiftAssignments('potr'),
+  miss: calcShiftAssignments('miss'),
+  nort: calcShiftAssignments('nort'),
+  park: calcShiftAssignments('park'),
+  rich: calcShiftAssignments('rich'),
+  ingl: calcShiftAssignments('ingl'),
+  tara: calcShiftAssignments('tara'),
+  tend: calcShiftAssignments('tend'),
+  dmac: calcShiftAssignments('dmac'),
+};
+
+export const SHIFT_TOTALS = {
+  days: Object.values(SHIFT_ASSIGNMENTS).reduce((s, a) => s + a.days, 0),
+  elevens: Object.values(SHIFT_ASSIGNMENTS).reduce((s, a) => s + a.elevens, 0),
+  swings: Object.values(SHIFT_ASSIGNMENTS).reduce((s, a) => s + a.swings, 0),
+  mids: Object.values(SHIFT_ASSIGNMENTS).reduce((s, a) => s + a.mids, 0),
+  total: Object.values(SHIFT_ASSIGNMENTS).reduce((s, a) => s + a.total, 0),
+};
+
+export const DAILY_TOTALS = {
+  days: Object.values(DAILY_ON_DUTY).reduce((s, d) => s + d.days, 0),
+  elevens: Object.values(DAILY_ON_DUTY).reduce((s, d) => s + d.elevens, 0),
+  swings: Object.values(DAILY_ON_DUTY).reduce((s, d) => s + d.swings, 0),
+  mids: Object.values(DAILY_ON_DUTY).reduce((s, d) => s + d.mids, 0),
+  get total() { return this.days + this.elevens + this.swings + this.mids; },
+};
+
 export const BUREAUS = BUREAUS_FULL_DUTY;
 
 export const STATIONS = [

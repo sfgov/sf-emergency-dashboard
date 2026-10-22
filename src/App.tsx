@@ -1,7 +1,10 @@
 import { useState, useMemo } from 'react';
 import { useIncidents, useResponseTimes } from './hooks/useIncidents';
 import type { TimeRange } from './services/sfOpenData';
-import { CITYWIDE, BUREAUS, STATIONS as STATION_KEYS, STATION_TOTAL, MODIFIED_DUTY_BREAKDOWN } from './data/staffing';
+import {
+  CITYWIDE, BUREAUS, STATIONS as STATION_KEYS, STATION_TOTAL, MODIFIED_DUTY_BREAKDOWN,
+  SHIFTS as SHIFT_DEFS, DAILY_ON_DUTY, DAILY_TOTALS, SHIFT_ASSIGNMENTS, SHIFT_TOTALS
+} from './data/staffing';
 import './App.css';
 
 const STATIONS = STATION_KEYS.map(key => {
@@ -36,32 +39,16 @@ const NON_PATROL_TOTAL = NON_PATROL_BUREAUS.reduce((sum, b) => sum + b.total, 0)
 const DISTRICTS = STATIONS;
 
 const SHIFTS = [
-  { id: 'days', label: 'Days', range: 'TBD', col: '#2a78d6', hours: [6,7,8,9,10,11,12,13] },
-  { id: '11s', label: '11\'s', range: 'TBD', col: '#9333ea', hours: [11,12,13,14,15,16,17,18] },
-  { id: 'swings', label: 'Swings', range: 'TBD', col: '#eb6834', hours: [14,15,16,17,18,19,20,21] },
-  { id: 'mids', label: 'Mids', range: 'TBD', col: '#1baf7a', hours: [22,23,0,1,2,3,4,5] },
+  { id: 'days', label: 'Days', range: '6a-4p', col: SHIFT_DEFS.days.color },
+  { id: '11s', label: "11's", range: '11a-9p', col: SHIFT_DEFS.elevens.color },
+  { id: 'swings', label: 'Swings', range: '3p-1a', col: SHIFT_DEFS.swings.color },
+  { id: 'mids', label: 'Mids', range: '9p-7a', col: SHIFT_DEFS.mids.color },
 ];
 
-const DAILY_STAFFING = {
-  central:    { days: 7,  elevens: 10, swings: 11, mids: 12, total: 40 },
-  southern:   { days: 22, elevens: 5,  swings: 17, mids: 14, total: 58 },
-  bayview:    { days: 11, elevens: 2,  swings: 15, mids: 14, total: 42 },
-  mission:    { days: 18, elevens: 5,  swings: 11, mids: 9,  total: 43 },
-  northern:   { days: 20, elevens: 3,  swings: 14, mids: 13, total: 50 },
-  park:       { days: 6,  elevens: 4,  swings: 7,  mids: 10, total: 27 },
-  richmond:   { days: 10, elevens: 1,  swings: 7,  mids: 8,  total: 25 },
-  ingleside:  { days: 10, elevens: 2,  swings: 9,  mids: 13, total: 34 },
-  taraval:    { days: 8,  elevens: 2,  swings: 15, mids: 7,  total: 32 },
-  tenderloin: { days: 11, elevens: 10, swings: 9,  mids: 14, total: 44 },
-  dmacc:      { days: 11, elevens: 18, swings: 1,  mids: 4,  total: 34 },
-};
-
-const SHIFT_TOTALS = {
-  days: 134,
-  elevens: 61,
-  swings: 116,
-  mids: 118,
-  total: 429,
+const STATION_NAME_MAP: Record<string, string> = {
+  cent: 'Central', sout: 'Southern', potr: 'Bayview', miss: 'Mission',
+  nort: 'Northern', park: 'Park', rich: 'Richmond', ingl: 'Ingleside',
+  tara: 'Taraval', tend: 'Tenderloin', dmac: 'DMACC',
 };
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -428,10 +415,10 @@ function App() {
           </div>
         </section>
 
-        <section className="card" aria-label="Daily shift staffing">
+        <section className="card" aria-label="Shift staffing">
           <div className="card-header">
-            <h2>Daily on-duty staffing by shift</h2>
-            <p>Officers actually working each shift on a typical day. Total: {SHIFT_TOTALS.total} on duty.</p>
+            <h2>Officers assigned by shift</h2>
+            <p>Full duty officers assigned to each shift. {SHIFT_TOTALS.total} total across stations + DMACC.</p>
           </div>
 
           <div className="shift-table">
@@ -443,9 +430,9 @@ function App() {
               <span className="shift-col-val">Mids</span>
               <span className="shift-col-total">Total</span>
             </div>
-            {Object.entries(DAILY_STAFFING).map(([key, data]) => (
+            {Object.entries(SHIFT_ASSIGNMENTS).map(([key, data]) => (
               <div key={key} className="shift-table-row">
-                <span className="shift-col-name">{key.charAt(0).toUpperCase() + key.slice(1)}</span>
+                <span className="shift-col-name">{STATION_NAME_MAP[key] || key}</span>
                 <span className="shift-col-val">{data.days}</span>
                 <span className="shift-col-val">{data.elevens}</span>
                 <span className="shift-col-val">{data.swings}</span>
@@ -460,6 +447,45 @@ function App() {
               <span className="shift-col-val">{SHIFT_TOTALS.swings}</span>
               <span className="shift-col-val">{SHIFT_TOTALS.mids}</span>
               <span className="shift-col-total">{SHIFT_TOTALS.total}</span>
+            </div>
+          </div>
+
+          <div className="section-divider" />
+
+          <div className="card-header">
+            <h2>Daily on-duty by shift</h2>
+            <p>Typical daily staffing (~50% of assigned due to two sides of week). {DAILY_TOTALS.total} on duty.</p>
+          </div>
+
+          <div className="shift-table">
+            <div className="shift-table-header">
+              <span className="shift-col-name">Station</span>
+              <span className="shift-col-val">Days</span>
+              <span className="shift-col-val">11's</span>
+              <span className="shift-col-val">Swings</span>
+              <span className="shift-col-val">Mids</span>
+              <span className="shift-col-total">Total</span>
+            </div>
+            {Object.entries(DAILY_ON_DUTY).map(([key, data]) => {
+              const total = data.days + data.elevens + data.swings + data.mids;
+              return (
+                <div key={key} className="shift-table-row">
+                  <span className="shift-col-name">{STATION_NAME_MAP[key] || key}</span>
+                  <span className="shift-col-val">{data.days}</span>
+                  <span className="shift-col-val">{data.elevens}</span>
+                  <span className="shift-col-val">{data.swings}</span>
+                  <span className="shift-col-val">{data.mids}</span>
+                  <span className="shift-col-total">{total}</span>
+                </div>
+              );
+            })}
+            <div className="shift-table-row subtotal">
+              <span className="shift-col-name">Total</span>
+              <span className="shift-col-val">{DAILY_TOTALS.days}</span>
+              <span className="shift-col-val">{DAILY_TOTALS.elevens}</span>
+              <span className="shift-col-val">{DAILY_TOTALS.swings}</span>
+              <span className="shift-col-val">{DAILY_TOTALS.mids}</span>
+              <span className="shift-col-total">{DAILY_TOTALS.total}</span>
             </div>
           </div>
         </section>
