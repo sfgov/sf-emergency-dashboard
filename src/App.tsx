@@ -340,6 +340,20 @@ function App() {
                 </div>
               )}
             </div>
+
+            <div className="st-dmacc">
+              <div className="st-row st-dmacc-row">
+                <span className="st-name">Drug Market Agency Coordination Center</span>
+                <span className="st-col">{BUREAUS.fieldOps.units.dmac.total}</span>
+                <span className="st-col">{DAILY_ON_DUTY.dmac.days + DAILY_ON_DUTY.dmac.swings + DAILY_ON_DUTY.dmac.mids}</span>
+                <span className="st-col">{DAILY_ON_DUTY.dmac.days}</span>
+                <span className="st-col">{DAILY_ON_DUTY.dmac.swings}</span>
+                <span className="st-col">{DAILY_ON_DUTY.dmac.mids}</span>
+                <span className="st-col">{DAILY_ON_DUTY.dmac.elevens}</span>
+                <span className="st-col st-muted">—</span>
+              </div>
+              <div className="st-dmacc-note">Does not respond to calls for service</div>
+            </div>
           </div>
         </section>
 

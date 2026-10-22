@@ -483,6 +483,28 @@ button:focus-visible, select:focus-visible {
   color: var(--text-inverted-muted);
 }
 
+.st-dmacc {
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+
+.st-dmacc-row {
+  background: var(--bg-card);
+  cursor: default;
+}
+
+.st-dmacc-row:hover {
+  background: var(--bg-card);
+}
+
+.st-dmacc-note {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 4px 24px 8px;
+}
+
 .st-name {
   font-weight: 600;
   display: flex;
