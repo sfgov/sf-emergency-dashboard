@@ -379,6 +379,8 @@ function App() {
                     <div className="bt-units">
                       <div className="bt-units-header">
                         <span>Unit</span>
+                        <span>DC</span>
+                        <span>Cmdr</span>
                         <span>Capt</span>
                         <span>Lt</span>
                         <span>Sgt</span>
@@ -388,6 +390,8 @@ function App() {
                       {units.map((unit: any) => (
                         <div key={unit.name} className="bt-unit-row">
                           <span>{unit.name}</span>
+                          <span>{unit.deputyChief || unit.assistantChief || '—'}</span>
+                          <span>{unit.commander || '—'}</span>
                           <span>{unit.capt || '—'}</span>
                           <span>{unit.lt || '—'}</span>
                           <span>{unit.sgt || '—'}</span>
