@@ -160,48 +160,61 @@ function App() {
                             <th>Shift</th>
                             <th>Hours</th>
                             <th>Officers</th>
-                            <th>Total</th>
+                            <th>Total Calls</th>
                             <th>A</th>
                             <th>B</th>
                             <th>C</th>
+                            <th>Calls/Off</th>
                           </tr>
                         </thead>
                         <tbody>
-                          <tr>
-                            <td>Days</td>
-                            <td>6am–4pm</td>
-                            <td>{station.officers.days}</td>
-                            <td>{(station.shiftCalls.days.A + station.shiftCalls.days.B + station.shiftCalls.days.C).toFixed(1)}</td>
-                            <td className="st-pri-a">{station.shiftCalls.days.A.toFixed(1)}</td>
-                            <td className="st-pri-b">{station.shiftCalls.days.B.toFixed(1)}</td>
-                            <td>{station.shiftCalls.days.C.toFixed(1)}</td>
-                          </tr>
-                          <tr>
-                            <td>Swings</td>
-                            <td>3pm–1am</td>
-                            <td>{station.officers.swings}</td>
-                            <td>{(station.shiftCalls.swings.A + station.shiftCalls.swings.B + station.shiftCalls.swings.C).toFixed(1)}</td>
-                            <td className="st-pri-a">{station.shiftCalls.swings.A.toFixed(1)}</td>
-                            <td className="st-pri-b">{station.shiftCalls.swings.B.toFixed(1)}</td>
-                            <td>{station.shiftCalls.swings.C.toFixed(1)}</td>
-                          </tr>
-                          <tr>
-                            <td>Mids</td>
-                            <td>9pm–7am</td>
-                            <td>{station.officers.mids}</td>
-                            <td>{(station.shiftCalls.mids.A + station.shiftCalls.mids.B + station.shiftCalls.mids.C).toFixed(1)}</td>
-                            <td className="st-pri-a">{station.shiftCalls.mids.A.toFixed(1)}</td>
-                            <td className="st-pri-b">{station.shiftCalls.mids.B.toFixed(1)}</td>
-                            <td>{station.shiftCalls.mids.C.toFixed(1)}</td>
-                          </tr>
-                          {station.officers.elevens > 0 && (
-                            <tr className="st-footbeat-row">
-                              <td>Footbeats</td>
-                              <td>11am–9pm</td>
-                              <td>{station.officers.elevens}</td>
-                              <td colSpan={4} className="st-muted">don't respond to calls</td>
-                            </tr>
-                          )}
+                          {(() => {
+                            const daysTotal = station.shiftCalls.days.A + station.shiftCalls.days.B + station.shiftCalls.days.C;
+                            const swingsTotal = station.shiftCalls.swings.A + station.shiftCalls.swings.B + station.shiftCalls.swings.C;
+                            const midsTotal = station.shiftCalls.mids.A + station.shiftCalls.mids.B + station.shiftCalls.mids.C;
+                            return (
+                              <>
+                                <tr>
+                                  <td>Days</td>
+                                  <td>6am–4pm</td>
+                                  <td>{station.officers.days}</td>
+                                  <td>{daysTotal.toFixed(1)}</td>
+                                  <td className="st-pri-a">{station.shiftCalls.days.A.toFixed(1)}</td>
+                                  <td className="st-pri-b">{station.shiftCalls.days.B.toFixed(1)}</td>
+                                  <td>{station.shiftCalls.days.C.toFixed(1)}</td>
+                                  <td className="st-ratio">{station.officers.days > 0 ? (daysTotal / station.officers.days).toFixed(1) : '—'}</td>
+                                </tr>
+                                <tr>
+                                  <td>Swings</td>
+                                  <td>3pm–1am</td>
+                                  <td>{station.officers.swings}</td>
+                                  <td>{swingsTotal.toFixed(1)}</td>
+                                  <td className="st-pri-a">{station.shiftCalls.swings.A.toFixed(1)}</td>
+                                  <td className="st-pri-b">{station.shiftCalls.swings.B.toFixed(1)}</td>
+                                  <td>{station.shiftCalls.swings.C.toFixed(1)}</td>
+                                  <td className="st-ratio">{station.officers.swings > 0 ? (swingsTotal / station.officers.swings).toFixed(1) : '—'}</td>
+                                </tr>
+                                <tr>
+                                  <td>Mids</td>
+                                  <td>9pm–7am</td>
+                                  <td>{station.officers.mids}</td>
+                                  <td>{midsTotal.toFixed(1)}</td>
+                                  <td className="st-pri-a">{station.shiftCalls.mids.A.toFixed(1)}</td>
+                                  <td className="st-pri-b">{station.shiftCalls.mids.B.toFixed(1)}</td>
+                                  <td>{station.shiftCalls.mids.C.toFixed(1)}</td>
+                                  <td className="st-ratio">{station.officers.mids > 0 ? (midsTotal / station.officers.mids).toFixed(1) : '—'}</td>
+                                </tr>
+                                {station.officers.elevens > 0 && (
+                                  <tr className="st-footbeat-row">
+                                    <td>Footbeats</td>
+                                    <td>11am–9pm</td>
+                                    <td>{station.officers.elevens}</td>
+                                    <td colSpan={5} className="st-muted">don't respond to calls</td>
+                                  </tr>
+                                )}
+                              </>
+                            );
+                          })()}
                         </tbody>
                       </table>
                     </div>
