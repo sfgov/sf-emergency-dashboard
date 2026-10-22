@@ -160,12 +160,7 @@ function App() {
                             <th>Shift</th>
                             <th>Hours</th>
                             <th>Officers</th>
-                            <th colSpan={3} className="st-calls-header">Calls/hr by priority</th>
-                          </tr>
-                          <tr className="st-priority-row">
-                            <th></th>
-                            <th></th>
-                            <th></th>
+                            <th>Total</th>
                             <th>A</th>
                             <th>B</th>
                             <th>C</th>
@@ -176,6 +171,7 @@ function App() {
                             <td>Days</td>
                             <td>6am–4pm</td>
                             <td>{station.officers.days}</td>
+                            <td>{(station.shiftCalls.days.A + station.shiftCalls.days.B + station.shiftCalls.days.C).toFixed(1)}</td>
                             <td className="st-pri-a">{station.shiftCalls.days.A.toFixed(1)}</td>
                             <td className="st-pri-b">{station.shiftCalls.days.B.toFixed(1)}</td>
                             <td>{station.shiftCalls.days.C.toFixed(1)}</td>
@@ -184,6 +180,7 @@ function App() {
                             <td>Swings</td>
                             <td>3pm–1am</td>
                             <td>{station.officers.swings}</td>
+                            <td>{(station.shiftCalls.swings.A + station.shiftCalls.swings.B + station.shiftCalls.swings.C).toFixed(1)}</td>
                             <td className="st-pri-a">{station.shiftCalls.swings.A.toFixed(1)}</td>
                             <td className="st-pri-b">{station.shiftCalls.swings.B.toFixed(1)}</td>
                             <td>{station.shiftCalls.swings.C.toFixed(1)}</td>
@@ -192,6 +189,7 @@ function App() {
                             <td>Mids</td>
                             <td>9pm–7am</td>
                             <td>{station.officers.mids}</td>
+                            <td>{(station.shiftCalls.mids.A + station.shiftCalls.mids.B + station.shiftCalls.mids.C).toFixed(1)}</td>
                             <td className="st-pri-a">{station.shiftCalls.mids.A.toFixed(1)}</td>
                             <td className="st-pri-b">{station.shiftCalls.mids.B.toFixed(1)}</td>
                             <td>{station.shiftCalls.mids.C.toFixed(1)}</td>
@@ -201,7 +199,7 @@ function App() {
                               <td>Footbeats</td>
                               <td>11am–9pm</td>
                               <td>{station.officers.elevens}</td>
-                              <td colSpan={3} className="st-muted">don't respond to calls</td>
+                              <td colSpan={4} className="st-muted">don't respond to calls</td>
                             </tr>
                           )}
                         </tbody>

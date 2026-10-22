@@ -519,18 +519,6 @@ button:focus-visible, select:focus-visible {
   color: var(--text-muted);
 }
 
-.st-calls-header {
-  text-align: center !important;
-  font-size: 10px;
-  padding-bottom: 2px !important;
-}
-
-.st-priority-row th {
-  font-size: 11px;
-  padding-top: 0 !important;
-  border-bottom: 1px solid var(--border);
-}
-
 .st-pri-a {
   color: #dc2626;
   font-weight: 600;
