@@ -234,25 +234,18 @@ function App() {
 
                   {isExpanded && units.length > 0 && (
                     <div className="bb-units">
-                      {units.map((unit: any) => {
-                        const ranks = [
-                          unit.capt && `${unit.capt} Capt`,
-                          unit.lt && `${unit.lt} Lt`,
-                          unit.sgt && `${unit.sgt} Sgt`,
-                          unit.off && `${unit.off} Off`,
-                        ].filter(Boolean);
-                        return (
-                          <div key={unit.name} className="bb-unit">
-                            <span className="bb-unit-name">{unit.name}</span>
-                            <span className="bb-unit-ranks">
-                              {ranks.map((r, i) => (
-                                <span key={i} className="bb-rank">{r}</span>
-                              ))}
-                            </span>
-                            <span className="bb-unit-total">{unit.total}</span>
-                          </div>
-                        );
-                      })}
+                      {units.map((unit: any) => (
+                        <div key={unit.name} className="bb-unit">
+                          <span className="bb-unit-name">{unit.name}</span>
+                          <span className="bb-unit-ranks">
+                            <span className="bb-rank">{unit.capt ? `${unit.capt} Capt` : ''}</span>
+                            <span className="bb-rank">{unit.lt ? `${unit.lt} Lt` : ''}</span>
+                            <span className="bb-rank">{unit.sgt ? `${unit.sgt} Sgt` : ''}</span>
+                            <span className="bb-rank">{unit.off ? `${unit.off} Off` : ''}</span>
+                          </span>
+                          <span className="bb-unit-total">{unit.total}</span>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
