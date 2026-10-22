@@ -447,12 +447,40 @@ button:focus-visible, select:focus-visible {
   background: var(--bg-page);
 }
 
+.st-all-stations {
+  margin-top: 4px;
+}
+
 .st-total {
   background: var(--bg-inverted);
   color: var(--text-inverted);
-  cursor: default;
-  margin-top: 4px;
+  cursor: pointer;
   border-radius: var(--radius-sm);
+}
+
+.st-total:hover {
+  background: #2d2d2c;
+}
+
+.st-all-detail {
+  background: #2d2d2c;
+  padding: 16px 24px;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+.st-all-detail .st-shift-table {
+  background: transparent;
+}
+
+.st-all-detail .st-shift-table th,
+.st-all-detail .st-shift-table td {
+  background: transparent;
+  color: var(--text-inverted);
+  border-color: #444;
+}
+
+.st-all-detail .st-shift-table th {
+  color: var(--text-inverted-muted);
 }
 
 .st-name {

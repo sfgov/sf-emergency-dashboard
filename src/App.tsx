@@ -44,6 +44,7 @@ function getShiftCallsPerHour(calls: StationCalls | undefined) {
 function App() {
   const [expandedStation, setExpandedStation] = useState<string | null>(null);
   const [expandedBureau, setExpandedBureau] = useState<string | null>(null);
+  const [allStationsExpanded, setAllStationsExpanded] = useState(false);
 
   const stationData = useMemo(() => {
     const stations = Object.keys(STATION_NAMES) as Array<keyof typeof DAILY_ON_DUTY>;
@@ -81,6 +82,26 @@ function App() {
       };
     }).sort((a, b) => b.callsPerOfficer - a.callsPerOfficer);
   }, []);
+
+  const citywideShiftCalls = useMemo(() => {
+    const totals = {
+      days: { A: 0, B: 0, C: 0 },
+      swings: { A: 0, B: 0, C: 0 },
+      mids: { A: 0, B: 0, C: 0 },
+    };
+    stationData.forEach(s => {
+      totals.days.A += s.shiftCalls.days.A;
+      totals.days.B += s.shiftCalls.days.B;
+      totals.days.C += s.shiftCalls.days.C;
+      totals.swings.A += s.shiftCalls.swings.A;
+      totals.swings.B += s.shiftCalls.swings.B;
+      totals.swings.C += s.shiftCalls.swings.C;
+      totals.mids.A += s.shiftCalls.mids.A;
+      totals.mids.B += s.shiftCalls.mids.B;
+      totals.mids.C += s.shiftCalls.mids.C;
+    });
+    return totals;
+  }, [stationData]);
 
   const bureauBreakdown = [
     { key: 'fieldOps', label: 'Field Operations', value: BUREAUS.fieldOps.total, detail: `${STATION_TOTAL} in stations`, units: BUREAUS.fieldOps.units },
@@ -241,15 +262,74 @@ function App() {
               );
             })}
 
-            <div className="st-row st-total">
-              <span className="st-name">All stations</span>
-              <span className="st-col">{stationData.reduce((s, d) => s + d.ranks.total, 0)}</span>
-              <span className="st-col">{stationData.reduce((s, d) => s + d.patrolOfficers, 0)}</span>
-              <span className="st-col">{stationData.reduce((s, d) => s + d.officers.days, 0)}</span>
-              <span className="st-col">{stationData.reduce((s, d) => s + d.officers.swings, 0)}</span>
-              <span className="st-col">{stationData.reduce((s, d) => s + d.officers.mids, 0)}</span>
-              <span className="st-col">{stationData.reduce((s, d) => s + d.officers.elevens, 0)}</span>
-              <span className="st-col">{stationData.reduce((s, d) => s + d.totalCalls, 0)}</span>
+            <div className="st-all-stations">
+              <button
+                className={`st-row st-total ${allStationsExpanded ? 'st-expanded' : ''}`}
+                onClick={() => setAllStationsExpanded(!allStationsExpanded)}
+              >
+                <span className="st-name">
+                  <span className="st-expand" style={{color: 'var(--text-inverted-muted)'}}>{allStationsExpanded ? '▼' : '▶'}</span>
+                  All stations
+                </span>
+                <span className="st-col">{stationData.reduce((s, d) => s + d.ranks.total, 0)}</span>
+                <span className="st-col">{stationData.reduce((s, d) => s + d.patrolOfficers, 0)}</span>
+                <span className="st-col">{stationData.reduce((s, d) => s + d.officers.days, 0)}</span>
+                <span className="st-col">{stationData.reduce((s, d) => s + d.officers.swings, 0)}</span>
+                <span className="st-col">{stationData.reduce((s, d) => s + d.officers.mids, 0)}</span>
+                <span className="st-col">{stationData.reduce((s, d) => s + d.officers.elevens, 0)}</span>
+                <span className="st-col">{stationData.reduce((s, d) => s + d.totalCalls, 0)}</span>
+              </button>
+
+              {allStationsExpanded && (
+                <div className="st-all-detail">
+                  <table className="st-shift-table">
+                    <thead>
+                      <tr>
+                        <th>Shift</th>
+                        <th>Hours</th>
+                        <th>Officers</th>
+                        <th>Calls/hr</th>
+                        <th>A</th>
+                        <th>B</th>
+                        <th>C</th>
+                        <th>Total/day</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>Day</td>
+                        <td>6am–4pm</td>
+                        <td>{stationData.reduce((s, d) => s + d.officers.days, 0)}</td>
+                        <td>{(citywideShiftCalls.days.A + citywideShiftCalls.days.B + citywideShiftCalls.days.C).toFixed(1)}</td>
+                        <td className="st-pri-a">{citywideShiftCalls.days.A.toFixed(1)}</td>
+                        <td className="st-pri-b">{citywideShiftCalls.days.B.toFixed(1)}</td>
+                        <td>{citywideShiftCalls.days.C.toFixed(1)}</td>
+                        <td>{((citywideShiftCalls.days.A + citywideShiftCalls.days.B + citywideShiftCalls.days.C) * 10).toFixed(0)}</td>
+                      </tr>
+                      <tr>
+                        <td>Swing</td>
+                        <td>3pm–1am</td>
+                        <td>{stationData.reduce((s, d) => s + d.officers.swings, 0)}</td>
+                        <td>{(citywideShiftCalls.swings.A + citywideShiftCalls.swings.B + citywideShiftCalls.swings.C).toFixed(1)}</td>
+                        <td className="st-pri-a">{citywideShiftCalls.swings.A.toFixed(1)}</td>
+                        <td className="st-pri-b">{citywideShiftCalls.swings.B.toFixed(1)}</td>
+                        <td>{citywideShiftCalls.swings.C.toFixed(1)}</td>
+                        <td>{((citywideShiftCalls.swings.A + citywideShiftCalls.swings.B + citywideShiftCalls.swings.C) * 10).toFixed(0)}</td>
+                      </tr>
+                      <tr>
+                        <td>Night</td>
+                        <td>9pm–7am</td>
+                        <td>{stationData.reduce((s, d) => s + d.officers.mids, 0)}</td>
+                        <td>{(citywideShiftCalls.mids.A + citywideShiftCalls.mids.B + citywideShiftCalls.mids.C).toFixed(1)}</td>
+                        <td className="st-pri-a">{citywideShiftCalls.mids.A.toFixed(1)}</td>
+                        <td className="st-pri-b">{citywideShiftCalls.mids.B.toFixed(1)}</td>
+                        <td>{citywideShiftCalls.mids.C.toFixed(1)}</td>
+                        <td>{((citywideShiftCalls.mids.A + citywideShiftCalls.mids.B + citywideShiftCalls.mids.C) * 10).toFixed(0)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         </section>
