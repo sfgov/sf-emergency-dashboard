@@ -146,7 +146,7 @@ function App() {
                     </span>
                   </button>
 
-                  {isExpanded && station.calls && (
+                  {isExpanded && (
                     <div className="st-detail">
                       <div className="st-detail-header">
                         <span className="st-shift-label">Shift</span>
@@ -162,7 +162,7 @@ function App() {
                         { key: 'mids', label: 'Mids', hours: '9pm–7am', color: '#1baf7a' },
                       ].map(shift => {
                         const off = station.officers[shift.key as keyof typeof station.officers];
-                        const calls = station.calls?.byShift[shift.key as keyof typeof station.calls.byShift] || 0;
+                        const calls = station.calls?.byShift?.[shift.key as keyof typeof station.calls.byShift] || 0;
                         const ratio = off > 0 ? calls / off : 0;
                         const isShiftHigh = ratio > 3;
                         return (
@@ -173,9 +173,9 @@ function App() {
                             </span>
                             <span className="st-shift-hours">{shift.hours}</span>
                             <span className="st-shift-officers">{off}</span>
-                            <span className="st-shift-calls">{calls}</span>
+                            <span className="st-shift-calls">{callsLoading ? '...' : calls}</span>
                             <span className={`st-shift-ratio ${isShiftHigh ? 'st-ratio-high' : ''}`}>
-                              {ratio.toFixed(1)}
+                              {callsLoading ? '...' : ratio.toFixed(1)}
                             </span>
                           </div>
                         );
