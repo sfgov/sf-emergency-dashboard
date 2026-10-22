@@ -152,3 +152,39 @@ export function calculateMedian(values: number[]): number {
   const mid = Math.floor(sorted.length / 2);
   return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }
+
+export interface DistrictCallStats {
+  district: string;
+  priorityA: number;
+  priorityB: number;
+  priorityC: number;
+  total: number;
+  days: number;
+}
+
+export async function fetchCallsByDistrict(): Promise<DistrictCallStats[]> {
+  const calls = await fetchCADCalls('month');
+  const days = 30;
+
+  const districtMap = new Map<string, { a: number; b: number; c: number }>();
+
+  calls.forEach(call => {
+    const dist = call.district.toUpperCase();
+    if (!districtMap.has(dist)) {
+      districtMap.set(dist, { a: 0, b: 0, c: 0 });
+    }
+    const counts = districtMap.get(dist)!;
+    if (call.priority === 'A') counts.a++;
+    else if (call.priority === 'B') counts.b++;
+    else if (call.priority === 'C') counts.c++;
+  });
+
+  return Array.from(districtMap.entries()).map(([district, counts]) => ({
+    district,
+    priorityA: Math.round(counts.a / days),
+    priorityB: Math.round(counts.b / days),
+    priorityC: Math.round(counts.c / days),
+    total: Math.round((counts.a + counts.b + counts.c) / days),
+    days,
+  }));
+}

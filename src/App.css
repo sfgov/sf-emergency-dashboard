@@ -460,6 +460,88 @@ button:focus-visible, select:focus-visible {
   color: var(--text-secondary);
 }
 
+.station-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-x: auto;
+}
+
+.station-grid-header,
+.station-grid-row {
+  display: grid;
+  grid-template-columns: 100px repeat(4, 50px) 70px repeat(3, 50px) 70px 80px;
+  gap: 4px;
+  padding: 8px 12px;
+  align-items: center;
+  min-width: 750px;
+}
+
+.station-grid-header {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.station-grid-row {
+  background: var(--bg-page);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+}
+
+.station-grid-total {
+  background: var(--bg-inverted);
+  color: var(--text-inverted);
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.sg-name {
+  font-weight: 500;
+}
+
+.sg-shift {
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.sg-total {
+  text-align: center;
+  font-weight: 700;
+}
+
+.sg-calls {
+  text-align: center;
+}
+
+.sg-pri-a {
+  color: #d03a39;
+  font-weight: 600;
+}
+
+.sg-pri-b {
+  color: #eb6834;
+}
+
+.sg-pri-c {
+  color: var(--text-secondary);
+}
+
+.sg-ratio {
+  text-align: right;
+  font-weight: 600;
+}
+
+.station-grid-total .sg-shift,
+.station-grid-total .sg-calls,
+.station-grid-total .sg-pri-a,
+.station-grid-total .sg-pri-b,
+.station-grid-total .sg-pri-c {
+  color: var(--text-inverted-muted);
+}
+
 .response-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

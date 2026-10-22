@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Incident } from '../types/incidents';
-import { fetchPoliceIncidents, fetchCADCalls, calculateMedian, type TimeRange, type ResponseTimeData } from '../services/sfOpenData';
+import { fetchPoliceIncidents, fetchCADCalls, fetchCallsByDistrict, calculateMedian, type TimeRange, type ResponseTimeData, type DistrictCallStats } from '../services/sfOpenData';
 
 interface UseIncidentsReturn {
   incidents: Incident[];
@@ -112,4 +112,19 @@ export function useResponseTimes(timeRange: TimeRange = 'month') {
   };
 
   return { data, loading, error, stats, refetch: fetchData };
+}
+
+export function useDistrictCalls() {
+  const [data, setData] = useState<DistrictCallStats[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchCallsByDistrict()
+      .then(setData)
+      .catch(err => setError(err instanceof Error ? err.message : 'Failed to fetch'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  return { data, loading, error };
 }
