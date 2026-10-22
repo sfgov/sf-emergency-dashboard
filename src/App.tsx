@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
-import { useDistrictCalls, useResponseTimes } from './hooks/useIncidents';
+import { useDistrictCalls } from './hooks/useIncidents';
 import {
-  CITYWIDE, STATION_TOTAL, MODIFIED_DUTY_BREAKDOWN, BUREAUS,
-  DAILY_ON_DUTY, DAILY_TOTALS, SHIFT_ASSIGNMENTS
+  CITYWIDE, STATION_TOTAL, BUREAUS,
+  DAILY_ON_DUTY, DAILY_TOTALS
 } from './data/staffing';
 import './App.css';
 
@@ -12,224 +12,166 @@ const STATION_CODE_MAP: Record<string, string> = {
   TARAVAL: 'tara', TENDERLOIN: 'tend',
 };
 
-const STATION_NAME_MAP: Record<string, string> = {
+const STATION_NAMES: Record<string, string> = {
   cent: 'Central', sout: 'Southern', potr: 'Bayview', miss: 'Mission',
   nort: 'Northern', park: 'Park', rich: 'Richmond', ingl: 'Ingleside',
   tara: 'Taraval', tend: 'Tenderloin',
 };
 
-const fmt = (n: number) => Math.round(n).toLocaleString('en-US');
+const SHIFT_COLORS = {
+  days: '#2a78d6',
+  elevens: '#9333ea',
+  swings: '#eb6834',
+  mids: '#1baf7a',
+};
 
 function App() {
   const { data: callData, loading: callsLoading } = useDistrictCalls();
-  const { stats: responseStats, loading: responseLoading } = useResponseTimes('month');
 
   const stationData = useMemo(() => {
-    const stations = Object.keys(STATION_NAME_MAP) as Array<keyof typeof DAILY_ON_DUTY>;
+    const stations = Object.keys(STATION_NAMES) as Array<keyof typeof DAILY_ON_DUTY>;
+    const maxOfficers = Math.max(...stations.map(k => {
+      const d = DAILY_ON_DUTY[k];
+      return d.days + d.elevens + d.swings + d.mids;
+    }));
 
     return stations.map(key => {
-      const name = STATION_NAME_MAP[key];
+      const name = STATION_NAMES[key];
       const daily = DAILY_ON_DUTY[key];
-      const assigned = SHIFT_ASSIGNMENTS[key];
-      const dailyTotal = daily.days + daily.elevens + daily.swings + daily.mids;
-
+      const totalOfficers = daily.days + daily.elevens + daily.swings + daily.mids;
       const callStats = callData.find(c => STATION_CODE_MAP[c.district] === key);
+      const totalCalls = callStats ? callStats.total : 0;
+      const callsPerOfficer = totalOfficers > 0 ? totalCalls / totalOfficers : 0;
 
       return {
         key,
         name,
-        assigned,
         daily,
-        dailyTotal,
+        totalOfficers,
+        maxOfficers,
         calls: callStats || { priorityA: 0, priorityB: 0, priorityC: 0, total: 0 },
-        callsPerOfficer: dailyTotal > 0 && callStats ? (callStats.total / dailyTotal).toFixed(1) : '-',
+        totalCalls,
+        callsPerOfficer,
       };
-    });
+    }).sort((a, b) => b.callsPerOfficer - a.callsPerOfficer);
   }, [callData]);
 
-  const totals = useMemo(() => {
-    const totalCalls = stationData.reduce((s, d) => s + d.calls.total, 0);
-    return {
-      calls: totalCalls,
-      callsPerOfficer: DAILY_TOTALS.total > 0 ? (totalCalls / DAILY_TOTALS.total).toFixed(1) : '-',
-    };
-  }, [stationData]);
+  const maxCalls = Math.max(...stationData.map(s => s.totalCalls), 1);
+  const maxRatio = Math.max(...stationData.map(s => s.callsPerOfficer), 1);
 
   return (
     <div className="app">
       <div className="container">
         <header className="header">
           <div className="header-text">
-            <h1>SFPD patrol staffing</h1>
-            <p>Officers on duty vs calls for service by station</p>
+            <h1>SFPD station workload</h1>
+            <p>Which stations are stretched thin? Officers on duty vs calls for service.</p>
           </div>
         </header>
 
-        <section className="card" aria-label="Staffing breakdown">
-          <div className="card-header">
-            <h2>How {fmt(CITYWIDE.fullDuty)} full duty officers are assigned</h2>
-            <p>Target is {fmt(CITYWIDE.target)} — shortage of {fmt(CITYWIDE.shortage)} ({CITYWIDE.shortagePercent}% below). Plus {fmt(MODIFIED_DUTY_BREAKDOWN.total)} on modified duty.</p>
+        <section className="summary-bar">
+          <div className="summary-item">
+            <span className="summary-label">Full duty officers</span>
+            <span className="summary-value">{CITYWIDE.fullDuty.toLocaleString()}</span>
           </div>
-
-          <div className="breakdown-grid">
-            <div className="breakdown-row breakdown-header">
-              <span className="bd-label">Bureau / Unit</span>
-              <span className="bd-count">Officers</span>
-              <span className="bd-bar"></span>
-            </div>
-
-            <div className="breakdown-row breakdown-bureau">
-              <span className="bd-label">Field Operations Bureau</span>
-              <span className="bd-count">{fmt(BUREAUS.fieldOps.total)}</span>
-              <span className="bd-bar">
-                <span className="bd-fill" style={{ width: `${(BUREAUS.fieldOps.total / CITYWIDE.fullDuty) * 100}%` }} />
-              </span>
-            </div>
-            <div className="breakdown-row breakdown-sub">
-              <span className="bd-label">↳ 10 District Stations</span>
-              <span className="bd-count">{fmt(STATION_TOTAL)}</span>
-              <span className="bd-bar">
-                <span className="bd-fill bd-sub" style={{ width: `${(STATION_TOTAL / CITYWIDE.fullDuty) * 100}%` }} />
-              </span>
-            </div>
-            <div className="breakdown-row breakdown-sub">
-              <span className="bd-label">↳ DMACC + FOB + CED</span>
-              <span className="bd-count">{fmt(BUREAUS.fieldOps.total - STATION_TOTAL)}</span>
-              <span className="bd-bar">
-                <span className="bd-fill bd-sub" style={{ width: `${((BUREAUS.fieldOps.total - STATION_TOTAL) / CITYWIDE.fullDuty) * 100}%` }} />
-              </span>
-            </div>
-
-            <div className="breakdown-row breakdown-bureau">
-              <span className="bd-label">Bureau of Investigations</span>
-              <span className="bd-count">{fmt(BUREAUS.investigations.total)}</span>
-              <span className="bd-bar">
-                <span className="bd-fill" style={{ width: `${(BUREAUS.investigations.total / CITYWIDE.fullDuty) * 100}%` }} />
-              </span>
-            </div>
-
-            <div className="breakdown-row breakdown-bureau">
-              <span className="bd-label">Airport Bureau</span>
-              <span className="bd-count">{fmt(BUREAUS.airport.total)}</span>
-              <span className="bd-bar">
-                <span className="bd-fill" style={{ width: `${(BUREAUS.airport.total / CITYWIDE.fullDuty) * 100}%` }} />
-              </span>
-            </div>
-
-            <div className="breakdown-row breakdown-bureau">
-              <span className="bd-label">Special Operations Bureau</span>
-              <span className="bd-count">{fmt(BUREAUS.specialOps.total)}</span>
-              <span className="bd-bar">
-                <span className="bd-fill" style={{ width: `${(BUREAUS.specialOps.total / CITYWIDE.fullDuty) * 100}%` }} />
-              </span>
-            </div>
-
-            <div className="breakdown-row breakdown-bureau">
-              <span className="bd-label">Administration Bureau</span>
-              <span className="bd-count">{fmt(BUREAUS.admin.total)}</span>
-              <span className="bd-bar">
-                <span className="bd-fill" style={{ width: `${(BUREAUS.admin.total / CITYWIDE.fullDuty) * 100}%` }} />
-              </span>
-            </div>
-
-            <div className="breakdown-row breakdown-bureau">
-              <span className="bd-label">Chief of Staff + Chief's Office</span>
-              <span className="bd-count">{fmt(BUREAUS.chiefOfStaff.total + BUREAUS.chiefsOffice.total)}</span>
-              <span className="bd-bar">
-                <span className="bd-fill" style={{ width: `${((BUREAUS.chiefOfStaff.total + BUREAUS.chiefsOffice.total) / CITYWIDE.fullDuty) * 100}%` }} />
-              </span>
-            </div>
-
-            <div className="breakdown-row breakdown-total">
-              <span className="bd-label">Total Full Duty</span>
-              <span className="bd-count">{fmt(CITYWIDE.fullDuty)}</span>
-              <span className="bd-bar"></span>
-            </div>
+          <div className="summary-item">
+            <span className="summary-label">Station patrol</span>
+            <span className="summary-value">{STATION_TOTAL.toLocaleString()}</span>
+          </div>
+          <div className="summary-item">
+            <span className="summary-label">On duty daily</span>
+            <span className="summary-value">{DAILY_TOTALS.total}</span>
+          </div>
+          <div className="summary-item summary-shortage">
+            <span className="summary-label">Shortage</span>
+            <span className="summary-value">−{CITYWIDE.shortage.toLocaleString()}</span>
           </div>
         </section>
 
-        <section className="card" aria-label="Station staffing and calls">
+        <section className="card">
           <div className="card-header">
-            <h2>Station staffing vs daily calls</h2>
-            <p>Officers on duty per shift and average daily calls by priority (last 30 days)</p>
+            <h2>Stations ranked by workload</h2>
+            <p>Sorted by calls per officer — higher = more stretched. Daily averages over last 30 days.</p>
           </div>
 
-          <div className="station-grid">
-            <div className="station-grid-header">
-              <span className="sg-name">Station</span>
-              <span className="sg-shift">Days</span>
-              <span className="sg-shift">11's</span>
-              <span className="sg-shift">Swings</span>
-              <span className="sg-shift">Mids</span>
-              <span className="sg-total">On duty</span>
-              <span className="sg-calls">Pri A</span>
-              <span className="sg-calls">Pri B</span>
-              <span className="sg-calls">Pri C</span>
-              <span className="sg-total">Calls/day</span>
-              <span className="sg-ratio">Per officer</span>
-            </div>
+          <div className="legend-row">
+            <span className="legend-item"><span className="legend-swatch" style={{ background: SHIFT_COLORS.days }} /> Days 6a-4p</span>
+            <span className="legend-item"><span className="legend-swatch" style={{ background: SHIFT_COLORS.elevens }} /> 11's 11a-9p</span>
+            <span className="legend-item"><span className="legend-swatch" style={{ background: SHIFT_COLORS.swings }} /> Swings 3p-1a</span>
+            <span className="legend-item"><span className="legend-swatch" style={{ background: SHIFT_COLORS.mids }} /> Mids 9p-7a</span>
+          </div>
 
-            {stationData.map(station => (
-              <div key={station.key} className="station-grid-row">
-                <span className="sg-name">{station.name}</span>
-                <span className="sg-shift">{station.daily.days}</span>
-                <span className="sg-shift">{station.daily.elevens}</span>
-                <span className="sg-shift">{station.daily.swings}</span>
-                <span className="sg-shift">{station.daily.mids}</span>
-                <span className="sg-total">{station.dailyTotal}</span>
-                <span className="sg-calls sg-pri-a">{callsLoading ? '-' : station.calls.priorityA}</span>
-                <span className="sg-calls sg-pri-b">{callsLoading ? '-' : station.calls.priorityB}</span>
-                <span className="sg-calls sg-pri-c">{callsLoading ? '-' : station.calls.priorityC}</span>
-                <span className="sg-total">{callsLoading ? '-' : station.calls.total}</span>
-                <span className="sg-ratio">{callsLoading ? '-' : station.callsPerOfficer}</span>
+          <div className="workload-list">
+            {stationData.map((station, idx) => {
+              const isHighWorkload = station.callsPerOfficer > 2.5;
+              return (
+                <div key={station.key} className={`workload-row ${isHighWorkload ? 'high-workload' : ''}`}>
+                  <div className="wl-rank">{idx + 1}</div>
+                  <div className="wl-name">{station.name}</div>
+
+                  <div className="wl-officers">
+                    <div className="wl-label">Officers/day</div>
+                    <div className="wl-stacked-bar">
+                      <span className="wl-seg" style={{ width: `${(station.daily.days / station.maxOfficers) * 100}%`, background: SHIFT_COLORS.days }} title={`Days: ${station.daily.days}`} />
+                      <span className="wl-seg" style={{ width: `${(station.daily.elevens / station.maxOfficers) * 100}%`, background: SHIFT_COLORS.elevens }} title={`11's: ${station.daily.elevens}`} />
+                      <span className="wl-seg" style={{ width: `${(station.daily.swings / station.maxOfficers) * 100}%`, background: SHIFT_COLORS.swings }} title={`Swings: ${station.daily.swings}`} />
+                      <span className="wl-seg" style={{ width: `${(station.daily.mids / station.maxOfficers) * 100}%`, background: SHIFT_COLORS.mids }} title={`Mids: ${station.daily.mids}`} />
+                    </div>
+                    <div className="wl-value">{station.totalOfficers}</div>
+                  </div>
+
+                  <div className="wl-calls">
+                    <div className="wl-label">Calls/day</div>
+                    <div className="wl-bar-track">
+                      <span className="wl-bar" style={{ width: `${(station.totalCalls / maxCalls) * 100}%` }} />
+                    </div>
+                    <div className="wl-value">{callsLoading ? '-' : station.totalCalls}</div>
+                  </div>
+
+                  <div className="wl-ratio">
+                    <div className="wl-label">Calls/officer</div>
+                    <div className="wl-bar-track">
+                      <span className={`wl-bar ${isHighWorkload ? 'wl-bar-high' : ''}`} style={{ width: `${(station.callsPerOfficer / maxRatio) * 100}%` }} />
+                    </div>
+                    <div className={`wl-value ${isHighWorkload ? 'wl-value-high' : ''}`}>
+                      {callsLoading ? '-' : station.callsPerOfficer.toFixed(1)}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="card">
+          <div className="card-header">
+            <h2>Bureau breakdown</h2>
+            <p>Where the {CITYWIDE.fullDuty.toLocaleString()} full duty officers are assigned</p>
+          </div>
+
+          <div className="bureau-list">
+            {[
+              { name: 'Field Operations', total: BUREAUS.fieldOps.total, sub: `${STATION_TOTAL} stations + ${BUREAUS.fieldOps.total - STATION_TOTAL} other` },
+              { name: 'Investigations', total: BUREAUS.investigations.total },
+              { name: 'Airport', total: BUREAUS.airport.total },
+              { name: 'Special Operations', total: BUREAUS.specialOps.total },
+              { name: 'Administration', total: BUREAUS.admin.total },
+              { name: 'Chief of Staff + Office', total: BUREAUS.chiefOfStaff.total + BUREAUS.chiefsOffice.total },
+            ].map(bureau => (
+              <div key={bureau.name} className="bureau-row">
+                <span className="bureau-name">{bureau.name}</span>
+                <span className="bureau-bar">
+                  <span className="bureau-fill" style={{ width: `${(bureau.total / CITYWIDE.fullDuty) * 100}%` }} />
+                </span>
+                <span className="bureau-count">{bureau.total}</span>
+                {bureau.sub && <span className="bureau-sub">{bureau.sub}</span>}
               </div>
             ))}
-
-            <div className="station-grid-row station-grid-total">
-              <span className="sg-name">Total</span>
-              <span className="sg-shift">{DAILY_TOTALS.days}</span>
-              <span className="sg-shift">{DAILY_TOTALS.elevens}</span>
-              <span className="sg-shift">{DAILY_TOTALS.swings}</span>
-              <span className="sg-shift">{DAILY_TOTALS.mids}</span>
-              <span className="sg-total">{DAILY_TOTALS.total}</span>
-              <span className="sg-calls">{callsLoading ? '-' : stationData.reduce((s, d) => s + d.calls.priorityA, 0)}</span>
-              <span className="sg-calls">{callsLoading ? '-' : stationData.reduce((s, d) => s + d.calls.priorityB, 0)}</span>
-              <span className="sg-calls">{callsLoading ? '-' : stationData.reduce((s, d) => s + d.calls.priorityC, 0)}</span>
-              <span className="sg-total">{callsLoading ? '-' : totals.calls}</span>
-              <span className="sg-ratio">{callsLoading ? '-' : totals.callsPerOfficer}</span>
-            </div>
           </div>
-        </section>
-
-        <section className="card" aria-label="Response times">
-          <div className="card-header">
-            <h2>Response times by priority</h2>
-            <p>Median minutes from call to first unit on scene. Targets: A=8min, B=20min, C=60min.</p>
-          </div>
-
-          {responseLoading ? (
-            <div className="loading-text">Loading...</div>
-          ) : (
-            <div className="response-grid">
-              {responseStats.byPriority.map(p => {
-                const overPct = p.count > 0 ? Math.round((p.overTarget / p.count) * 100) : 0;
-                const isOver = p.median > p.target;
-                return (
-                  <div key={p.priority} className={`response-card ${isOver ? 'over' : 'ok'}`}>
-                    <div className="response-priority">Priority {p.priority}</div>
-                    <div className="response-median">{p.median.toFixed(1)} min</div>
-                    <div className="response-target">Target: {p.target} min</div>
-                    <div className="response-count">{fmt(p.count)} calls</div>
-                    <div className="response-over">{overPct}% over target</div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
         </section>
 
         <footer className="footer">
-          Staffing data from SFPD personnel records. Call data from SF OpenData CAD dataset (last 30 days).
+          Data: SFPD personnel records, SF OpenData CAD calls (30-day average).
         </footer>
       </div>
     </div>
