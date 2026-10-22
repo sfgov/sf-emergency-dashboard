@@ -79,6 +79,7 @@ function App() {
           off: stationInfo?.off || 0,
           total: stationInfo?.total || 0,
         },
+        subunits: (stationInfo as any)?.subunits || null,
       };
     }).sort((a, b) => b.callsPerOfficer - a.callsPerOfficer);
   }, []);
@@ -182,6 +183,13 @@ function App() {
                           <div className="st-detail-info">
                             <strong>{station.ranks.total} assigned</strong> · {station.ranks.capt} Capt · {station.ranks.lt} Lt · {station.ranks.sgt} Sgt · {station.ranks.off} Off
                           </div>
+                          {station.subunits && (
+                            <div className="st-subunits">
+                              {station.subunits.map((sub: {name: string; total: number}) => (
+                                <span key={sub.name} className="st-subunit">{sub.name}: {sub.total}</span>
+                              ))}
+                            </div>
+                          )}
                           <table className="st-shift-table">
                             <thead>
                               <tr>

@@ -25,7 +25,22 @@ export const BUREAUS_FULL_DUTY = {
       ingl: { name: 'Ingleside', code: 'INGL', capt: 1, lt: 4, sgt: 13, off: 77, total: 95 },
       tara: { name: 'Taraval', code: 'TARA', capt: 1, lt: 4, sgt: 13, off: 64, total: 82 },
       tend: { name: 'Tenderloin', code: 'TEND', capt: 1, lt: 4, sgt: 14, off: 95, total: 114 },
-      dmac: { name: 'DMACC', code: 'DMAC', capt: 1, lt: 2, sgt: 14, off: 63, total: 80 },
+      dmac: {
+        name: 'DMACC',
+        code: 'DMAC',
+        capt: 1,
+        lt: 2,
+        sgt: 14,
+        off: 63,
+        total: 80,
+        subunits: [
+          { name: 'HSOC', total: 30 },
+          { name: 'Narcotics', total: 15 },
+          { name: 'Enforcement Team', total: 25 },
+          { name: 'FRET', total: 5 },
+          { name: 'Admin/Command', total: 5 },
+        ]
+      },
       fob: { name: 'FOB HQ', code: 'FOB', capt: 3, lt: 3, sgt: 5, off: 11, total: 27, deputyChief: 1, commander: 4 },
       ced: { name: 'CED', code: 'CED', lt: 1, sgt: 3, off: 4, total: 8 },
     },
