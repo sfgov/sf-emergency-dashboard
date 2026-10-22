@@ -48,9 +48,6 @@ function App() {
     }).sort((a, b) => b.callsPerOfficer - a.callsPerOfficer);
   }, []);
 
-  const maxCalls = Math.max(...stationData.map(s => s.totalCalls));
-  const maxOfficers = Math.max(...stationData.map(s => s.patrolOfficers));
-
   const bureauBreakdown = [
     { key: 'fieldOps', label: 'Field Operations', value: BUREAUS.fieldOps.total, detail: `${STATION_TOTAL} in stations`, units: BUREAUS.fieldOps.units },
     { key: 'investigations', label: 'Investigations', value: BUREAUS.investigations.total, units: (BUREAUS.investigations as any).units },
@@ -98,67 +95,66 @@ function App() {
         <section className="card">
           <div className="card-header">
             <h2>Station workload</h2>
-            <p>Patrol officers (excluding footbeats) vs calls for service. Sorted by calls per officer.</p>
+            <p>Patrol officers (excluding footbeats) vs calls for service. Click a station to see details.</p>
           </div>
 
-          <div className="chart-legend">
-            <span className="chart-legend-item"><span className="legend-bar legend-officers"></span> Patrol officers/day</span>
-            <span className="chart-legend-item"><span className="legend-bar legend-calls"></span> Calls/day</span>
-          </div>
+          <div className="station-table">
+            <div className="st-header">
+              <span className="st-name">Station</span>
+              <span className="st-col">Patrol/day</span>
+              <span className="st-col">Calls/day</span>
+              <span className="st-col">Calls/officer</span>
+            </div>
 
-          <div className="station-chart">
             {stationData.map(station => {
               const isExpanded = expandedStation === station.key;
               const isHighWorkload = station.callsPerOfficer > 5;
 
               return (
-                <div key={station.key} className="sc-row">
+                <div key={station.key} className="st-station">
                   <button
-                    className={`sc-header ${isExpanded ? 'sc-expanded' : ''}`}
+                    className={`st-row ${isHighWorkload ? 'st-high' : ''} ${isExpanded ? 'st-expanded' : ''}`}
                     onClick={() => setExpandedStation(isExpanded ? null : station.key)}
                   >
-                    <span className="sc-name">{station.name}</span>
-                    <span className="sc-bars">
-                      <span className="sc-bar sc-officers" style={{ width: `${(station.patrolOfficers / maxOfficers) * 100}%` }}>
-                        {station.patrolOfficers}
-                      </span>
-                      <span className="sc-bar sc-calls" style={{ width: `${(station.totalCalls / maxCalls) * 100}%` }}>
-                        {station.totalCalls}
-                      </span>
+                    <span className="st-name">
+                      <span className="st-expand">{isExpanded ? '▼' : '▶'}</span>
+                      {station.name}
                     </span>
-                    <span className={`sc-ratio ${isHighWorkload ? 'sc-ratio-high' : ''}`}>
+                    <span className="st-col">{station.patrolOfficers}</span>
+                    <span className="st-col">{station.totalCalls}</span>
+                    <span className={`st-col st-ratio ${isHighWorkload ? 'st-ratio-high' : ''}`}>
                       {station.callsPerOfficer.toFixed(1)}
                     </span>
                   </button>
 
                   {isExpanded && (
-                    <div className="sc-detail">
-                      <div className="sc-detail-grid">
-                        <div className="sc-detail-box">
-                          <div className="sc-detail-label">Full duty assigned</div>
-                          <div className="sc-detail-value">{station.ranks.total}</div>
-                          <div className="sc-detail-sub">
+                    <div className="st-detail">
+                      <div className="st-detail-grid">
+                        <div className="st-detail-box">
+                          <div className="st-detail-label">Full duty assigned</div>
+                          <div className="st-detail-value">{station.ranks.total}</div>
+                          <div className="st-detail-sub">
                             {station.ranks.capt} Capt · {station.ranks.lt} Lt · {station.ranks.sgt} Sgt · {station.ranks.off} Off
                           </div>
                         </div>
-                        <div className="sc-detail-box">
-                          <div className="sc-detail-label">Daily on duty</div>
-                          <div className="sc-detail-value">{station.totalOfficers}</div>
-                          <div className="sc-detail-sub">
+                        <div className="st-detail-box">
+                          <div className="st-detail-label">Daily on duty</div>
+                          <div className="st-detail-value">{station.totalOfficers}</div>
+                          <div className="st-detail-sub">
                             {station.officers.days} Days · {station.officers.elevens} 11's · {station.officers.swings} Swings · {station.officers.mids} Mids
                           </div>
                         </div>
-                        <div className="sc-detail-box">
-                          <div className="sc-detail-label">Calls by priority</div>
-                          <div className="sc-detail-value">{station.totalCalls}/day</div>
-                          <div className="sc-detail-sub sc-priority">
-                            <span className="sc-pri-a">{station.calls?.daily.A || 0} A</span>
-                            <span className="sc-pri-b">{station.calls?.daily.B || 0} B</span>
-                            <span className="sc-pri-c">{station.calls?.daily.C || 0} C</span>
+                        <div className="st-detail-box">
+                          <div className="st-detail-label">Calls by priority</div>
+                          <div className="st-detail-value">{station.totalCalls}/day</div>
+                          <div className="st-detail-sub st-priority">
+                            <span className="st-pri-a">{station.calls?.daily.A || 0} A</span>
+                            <span className="st-pri-b">{station.calls?.daily.B || 0} B</span>
+                            <span className="st-pri-c">{station.calls?.daily.C || 0} C</span>
                           </div>
                         </div>
                       </div>
-                      <div className="sc-detail-note">
+                      <div className="st-detail-note">
                         11's are footbeat officers and excluded from calls/officer ratio.
                       </div>
                     </div>
@@ -166,15 +162,15 @@ function App() {
                 </div>
               );
             })}
-          </div>
 
-          <div className="sc-total">
-            <span className="sc-total-label">All stations</span>
-            <span className="sc-total-value">{stationData.reduce((s, d) => s + d.patrolOfficers, 0)} patrol officers</span>
-            <span className="sc-total-value">{stationData.reduce((s, d) => s + d.totalCalls, 0)} calls/day</span>
-            <span className="sc-total-ratio">
-              {(stationData.reduce((s, d) => s + d.totalCalls, 0) / stationData.reduce((s, d) => s + d.patrolOfficers, 0)).toFixed(1)} calls/officer
-            </span>
+            <div className="st-row st-total">
+              <span className="st-name">All stations</span>
+              <span className="st-col">{stationData.reduce((s, d) => s + d.patrolOfficers, 0)}</span>
+              <span className="st-col">{stationData.reduce((s, d) => s + d.totalCalls, 0)}</span>
+              <span className="st-col">
+                {(stationData.reduce((s, d) => s + d.totalCalls, 0) / stationData.reduce((s, d) => s + d.patrolOfficers, 0)).toFixed(1)}
+              </span>
+            </div>
           </div>
         </section>
 
