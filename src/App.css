@@ -324,6 +324,12 @@ button:focus-visible, select:focus-visible {
 .bb-unit-ranks {
   color: var(--text-muted);
   font-size: 12px;
+  display: flex;
+  gap: 12px;
+}
+
+.bb-rank {
+  white-space: nowrap;
 }
 
 .bb-unit-total {
