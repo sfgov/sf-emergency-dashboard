@@ -3,7 +3,7 @@ import {
   CITYWIDE, STATION_TOTAL, BUREAUS, MODIFIED_DUTY_BREAKDOWN,
   DAILY_ON_DUTY
 } from './data/staffing';
-import { CALL_DATA } from './data/calls';
+import { CALL_DATA, type StationCalls } from './data/calls';
 import './App.css';
 
 const STATION_NAMES: Record<string, string> = {
@@ -11,6 +11,24 @@ const STATION_NAMES: Record<string, string> = {
   nort: 'Northern', park: 'Park', rich: 'Richmond', ingl: 'Ingleside',
   tara: 'Taraval', tend: 'Tenderloin',
 };
+
+function getShiftCallsPerHour(calls: StationCalls | undefined) {
+  if (!calls) return { days: 0, elevens: 0, swings: 0, mids: 0 };
+  const h = calls.byHour;
+  const sum = (start: number, end: number) => {
+    let total = 0;
+    for (let i = start; i < end; i++) {
+      total += h[i].A + h[i].B + h[i].C;
+    }
+    return total;
+  };
+  return {
+    days: (sum(6, 16)) / 10,      // 6am-4pm
+    elevens: (sum(11, 21)) / 10,  // 11am-9pm
+    swings: (sum(15, 24) + sum(0, 1)) / 10,  // 3pm-1am
+    mids: (sum(21, 24) + sum(0, 7)) / 10,    // 9pm-7am
+  };
+}
 
 function App() {
   const [expandedStation, setExpandedStation] = useState<string | null>(null);
@@ -28,6 +46,8 @@ function App() {
       const totalCalls = callStats ? callStats.daily.A + callStats.daily.B + callStats.daily.C : 0;
       const stationInfo = BUREAUS.fieldOps.units[key];
 
+      const shiftCalls = getShiftCallsPerHour(callStats);
+
       return {
         key,
         name,
@@ -37,6 +57,7 @@ function App() {
         calls: callStats,
         totalCalls: Math.round(totalCalls),
         callsPerOfficer: patrolOfficers > 0 ? totalCalls / patrolOfficers : 0,
+        shiftCalls,
         ranks: {
           capt: stationInfo?.capt || 0,
           lt: stationInfo?.lt || 0,
@@ -101,9 +122,10 @@ function App() {
           <div className="station-table">
             <div className="st-header">
               <span className="st-name">Station</span>
+              <span className="st-col">Total</span>
               <span className="st-col">Patrol/day</span>
+              <span className="st-col-wide">Patrol/shift</span>
               <span className="st-col">Calls/day</span>
-              <span className="st-col">Calls/officer</span>
             </div>
 
             {stationData.map(station => {
@@ -120,42 +142,67 @@ function App() {
                       <span className="st-expand">{isExpanded ? '▼' : '▶'}</span>
                       {station.name}
                     </span>
+                    <span className="st-col">{station.ranks.total}</span>
                     <span className="st-col">{station.patrolOfficers}</span>
-                    <span className="st-col">{station.totalCalls}</span>
-                    <span className={`st-col st-ratio ${isHighWorkload ? 'st-ratio-high' : ''}`}>
-                      {station.callsPerOfficer.toFixed(1)}
+                    <span className="st-col-wide st-shift-cols">
+                      <span>{station.officers.days}D</span>
+                      <span>{station.officers.elevens}E</span>
+                      <span>{station.officers.swings}S</span>
+                      <span>{station.officers.mids}M</span>
                     </span>
+                    <span className="st-col">{station.totalCalls}</span>
                   </button>
 
                   {isExpanded && (
                     <div className="st-detail">
-                      <div className="st-detail-grid">
-                        <div className="st-detail-box">
-                          <div className="st-detail-label">Full duty assigned</div>
-                          <div className="st-detail-value">{station.ranks.total}</div>
-                          <div className="st-detail-sub">
-                            {station.ranks.capt} Capt · {station.ranks.lt} Lt · {station.ranks.sgt} Sgt · {station.ranks.off} Off
-                          </div>
-                        </div>
-                        <div className="st-detail-box">
-                          <div className="st-detail-label">Daily on duty</div>
-                          <div className="st-detail-value">{station.totalOfficers}</div>
-                          <div className="st-detail-sub">
-                            {station.officers.days} Days · {station.officers.elevens} 11's · {station.officers.swings} Swings · {station.officers.mids} Mids
-                          </div>
-                        </div>
-                        <div className="st-detail-box">
-                          <div className="st-detail-label">Calls by priority</div>
-                          <div className="st-detail-value">{station.totalCalls}/day</div>
-                          <div className="st-detail-sub st-priority">
-                            <span className="st-pri-a">{station.calls?.daily.A || 0} A</span>
-                            <span className="st-pri-b">{station.calls?.daily.B || 0} B</span>
-                            <span className="st-pri-c">{station.calls?.daily.C || 0} C</span>
-                          </div>
+                      <div className="st-detail-section">
+                        <div className="st-detail-title">Assigned</div>
+                        <div className="st-detail-row">
+                          <span className="st-detail-label">Total full duty:</span>
+                          <span className="st-detail-value">{station.ranks.total}</span>
+                          <span className="st-detail-sub">({station.ranks.capt} Capt · {station.ranks.lt} Lt · {station.ranks.sgt} Sgt · {station.ranks.off} Off)</span>
                         </div>
                       </div>
-                      <div className="st-detail-note">
-                        11's are footbeat officers and excluded from calls/officer ratio.
+
+                      <div className="st-detail-section">
+                        <div className="st-detail-title">By shift</div>
+                        <table className="st-shift-table">
+                          <thead>
+                            <tr>
+                              <th>Shift</th>
+                              <th>Hours</th>
+                              <th>Officers/day</th>
+                              <th>Calls/hr</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td>Days</td>
+                              <td>6am–4pm</td>
+                              <td>{station.officers.days}</td>
+                              <td>{station.shiftCalls.days.toFixed(1)}</td>
+                            </tr>
+                            <tr>
+                              <td>11's</td>
+                              <td>11am–9pm</td>
+                              <td>{station.officers.elevens}</td>
+                              <td className="st-muted">{station.shiftCalls.elevens.toFixed(1)}*</td>
+                            </tr>
+                            <tr>
+                              <td>Swings</td>
+                              <td>3pm–1am</td>
+                              <td>{station.officers.swings}</td>
+                              <td>{station.shiftCalls.swings.toFixed(1)}</td>
+                            </tr>
+                            <tr>
+                              <td>Mids</td>
+                              <td>9pm–7am</td>
+                              <td>{station.officers.mids}</td>
+                              <td>{station.shiftCalls.mids.toFixed(1)}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                        <div className="st-detail-note">*11's are footbeat officers—don't respond to calls for service</div>
                       </div>
                     </div>
                   )}
