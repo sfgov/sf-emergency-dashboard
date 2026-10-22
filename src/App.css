@@ -394,6 +394,10 @@ button:focus-visible, select:focus-visible {
   color: var(--text-secondary);
 }
 
+.st-footbeat {
+  color: var(--text-muted);
+}
+
 .st-row:hover {
   background: var(--bg-hover);
 }
