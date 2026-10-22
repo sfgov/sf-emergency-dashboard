@@ -153,38 +153,65 @@ export function calculateMedian(values: number[]): number {
   return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
+export interface ShiftCallStats {
+  days: number;
+  elevens: number;
+  swings: number;
+  mids: number;
+}
+
 export interface DistrictCallStats {
   district: string;
   priorityA: number;
   priorityB: number;
   priorityC: number;
   total: number;
-  days: number;
+  byShift: ShiftCallStats;
+  numDays: number;
+}
+
+function hourToShift(hour: number): keyof ShiftCallStats {
+  if (hour >= 6 && hour < 15) return 'days';
+  if (hour >= 11 && hour < 21) return 'elevens';
+  if (hour >= 15 || hour < 1) return 'swings';
+  return 'mids';
 }
 
 export async function fetchCallsByDistrict(): Promise<DistrictCallStats[]> {
   const calls = await fetchCADCalls('month');
-  const days = 30;
+  const numDays = 30;
 
-  const districtMap = new Map<string, { a: number; b: number; c: number }>();
+  const districtMap = new Map<string, {
+    a: number; b: number; c: number;
+    days: number; elevens: number; swings: number; mids: number;
+  }>();
 
   calls.forEach(call => {
     const dist = call.district.toUpperCase();
     if (!districtMap.has(dist)) {
-      districtMap.set(dist, { a: 0, b: 0, c: 0 });
+      districtMap.set(dist, { a: 0, b: 0, c: 0, days: 0, elevens: 0, swings: 0, mids: 0 });
     }
     const counts = districtMap.get(dist)!;
     if (call.priority === 'A') counts.a++;
     else if (call.priority === 'B') counts.b++;
     else if (call.priority === 'C') counts.c++;
+
+    const shift = hourToShift(call.hour);
+    counts[shift]++;
   });
 
   return Array.from(districtMap.entries()).map(([district, counts]) => ({
     district,
-    priorityA: Math.round(counts.a / days),
-    priorityB: Math.round(counts.b / days),
-    priorityC: Math.round(counts.c / days),
-    total: Math.round((counts.a + counts.b + counts.c) / days),
-    days,
+    priorityA: Math.round(counts.a / numDays),
+    priorityB: Math.round(counts.b / numDays),
+    priorityC: Math.round(counts.c / numDays),
+    total: Math.round((counts.a + counts.b + counts.c) / numDays),
+    byShift: {
+      days: Math.round(counts.days / numDays),
+      elevens: Math.round(counts.elevens / numDays),
+      swings: Math.round(counts.swings / numDays),
+      mids: Math.round(counts.mids / numDays),
+    },
+    numDays,
   }));
 }
