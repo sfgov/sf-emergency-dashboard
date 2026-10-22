@@ -464,13 +464,14 @@ button:focus-visible, select:focus-visible {
 }
 
 .st-detail-grid {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 24px;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
 .st-detail-left {
-  min-width: 0;
+  flex: 1;
+  min-width: 300px;
 }
 
 .st-detail-info {
@@ -491,16 +492,15 @@ button:focus-visible, select:focus-visible {
 }
 
 .st-shift-table {
-  width: 100%;
-  max-width: 400px;
   border-collapse: collapse;
   font-size: 13px;
+  white-space: nowrap;
 }
 
 .st-shift-table th {
   text-align: left;
   font-weight: 600;
-  padding: 6px 12px;
+  padding: 6px 10px;
   background: white;
   border-bottom: 1px solid var(--border);
 }
@@ -510,7 +510,7 @@ button:focus-visible, select:focus-visible {
 }
 
 .st-shift-table td {
-  padding: 8px 12px;
+  padding: 6px 10px;
   background: white;
   border-bottom: 1px solid #eee;
 }
