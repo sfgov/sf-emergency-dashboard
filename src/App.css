@@ -460,6 +460,79 @@ button:focus-visible, select:focus-visible {
   color: var(--text-secondary);
 }
 
+.breakdown-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.breakdown-row {
+  display: grid;
+  grid-template-columns: 220px 80px 1fr;
+  gap: 12px;
+  padding: 10px 12px;
+  align-items: center;
+  border-radius: var(--radius-sm);
+}
+
+.breakdown-header {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.breakdown-bureau {
+  background: var(--bg-page);
+}
+
+.breakdown-sub {
+  padding-left: 24px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.breakdown-total {
+  background: var(--bg-inverted);
+  color: var(--text-inverted);
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.bd-label {
+  font-weight: 500;
+}
+
+.breakdown-sub .bd-label {
+  font-weight: 400;
+}
+
+.bd-count {
+  text-align: right;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.bd-bar {
+  height: 20px;
+  background: var(--bg-card);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.bd-fill {
+  height: 100%;
+  background: var(--text-primary);
+  border-radius: 3px;
+}
+
+.bd-fill.bd-sub {
+  background: var(--text-muted);
+}
+
 .station-grid {
   display: flex;
   flex-direction: column;

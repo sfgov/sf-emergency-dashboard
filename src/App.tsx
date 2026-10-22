@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useDistrictCalls, useResponseTimes } from './hooks/useIncidents';
 import {
-  CITYWIDE, STATION_TOTAL, MODIFIED_DUTY_BREAKDOWN,
+  CITYWIDE, STATION_TOTAL, MODIFIED_DUTY_BREAKDOWN, BUREAUS,
   DAILY_ON_DUTY, DAILY_TOTALS, SHIFT_ASSIGNMENTS
 } from './data/staffing';
 import './App.css';
@@ -65,26 +65,86 @@ function App() {
           </div>
         </header>
 
-        <section className="kpi-grid" aria-label="Staffing summary">
-          <div className="kpi-card">
-            <div className="kpi-label">Target</div>
-            <div className="kpi-value">{fmt(CITYWIDE.target)}</div>
-            <div className="kpi-sub">authorized</div>
+        <section className="card" aria-label="Staffing breakdown">
+          <div className="card-header">
+            <h2>How {fmt(CITYWIDE.fullDuty)} full duty officers are assigned</h2>
+            <p>Target is {fmt(CITYWIDE.target)} — shortage of {fmt(CITYWIDE.shortage)} ({CITYWIDE.shortagePercent}% below). Plus {fmt(MODIFIED_DUTY_BREAKDOWN.total)} on modified duty.</p>
           </div>
-          <div className="kpi-card">
-            <div className="kpi-label">Full duty</div>
-            <div className="kpi-value">{fmt(CITYWIDE.fullDuty)}</div>
-            <div className="kpi-sub">{fmt(MODIFIED_DUTY_BREAKDOWN.total)} on modified duty</div>
-          </div>
-          <div className="kpi-card inverted">
-            <div className="kpi-label">Shortage</div>
-            <div className="kpi-value">−{fmt(CITYWIDE.shortage)}</div>
-            <div className="kpi-sub">{CITYWIDE.shortagePercent}% below target</div>
-          </div>
-          <div className="kpi-card">
-            <div className="kpi-label">Station patrol</div>
-            <div className="kpi-value">{fmt(STATION_TOTAL)}</div>
-            <div className="kpi-sub">{fmt(DAILY_TOTALS.total)} on duty daily</div>
+
+          <div className="breakdown-grid">
+            <div className="breakdown-row breakdown-header">
+              <span className="bd-label">Bureau / Unit</span>
+              <span className="bd-count">Officers</span>
+              <span className="bd-bar"></span>
+            </div>
+
+            <div className="breakdown-row breakdown-bureau">
+              <span className="bd-label">Field Operations Bureau</span>
+              <span className="bd-count">{fmt(BUREAUS.fieldOps.total)}</span>
+              <span className="bd-bar">
+                <span className="bd-fill" style={{ width: `${(BUREAUS.fieldOps.total / CITYWIDE.fullDuty) * 100}%` }} />
+              </span>
+            </div>
+            <div className="breakdown-row breakdown-sub">
+              <span className="bd-label">↳ 10 District Stations</span>
+              <span className="bd-count">{fmt(STATION_TOTAL)}</span>
+              <span className="bd-bar">
+                <span className="bd-fill bd-sub" style={{ width: `${(STATION_TOTAL / CITYWIDE.fullDuty) * 100}%` }} />
+              </span>
+            </div>
+            <div className="breakdown-row breakdown-sub">
+              <span className="bd-label">↳ DMACC + FOB + CED</span>
+              <span className="bd-count">{fmt(BUREAUS.fieldOps.total - STATION_TOTAL)}</span>
+              <span className="bd-bar">
+                <span className="bd-fill bd-sub" style={{ width: `${((BUREAUS.fieldOps.total - STATION_TOTAL) / CITYWIDE.fullDuty) * 100}%` }} />
+              </span>
+            </div>
+
+            <div className="breakdown-row breakdown-bureau">
+              <span className="bd-label">Bureau of Investigations</span>
+              <span className="bd-count">{fmt(BUREAUS.investigations.total)}</span>
+              <span className="bd-bar">
+                <span className="bd-fill" style={{ width: `${(BUREAUS.investigations.total / CITYWIDE.fullDuty) * 100}%` }} />
+              </span>
+            </div>
+
+            <div className="breakdown-row breakdown-bureau">
+              <span className="bd-label">Airport Bureau</span>
+              <span className="bd-count">{fmt(BUREAUS.airport.total)}</span>
+              <span className="bd-bar">
+                <span className="bd-fill" style={{ width: `${(BUREAUS.airport.total / CITYWIDE.fullDuty) * 100}%` }} />
+              </span>
+            </div>
+
+            <div className="breakdown-row breakdown-bureau">
+              <span className="bd-label">Special Operations Bureau</span>
+              <span className="bd-count">{fmt(BUREAUS.specialOps.total)}</span>
+              <span className="bd-bar">
+                <span className="bd-fill" style={{ width: `${(BUREAUS.specialOps.total / CITYWIDE.fullDuty) * 100}%` }} />
+              </span>
+            </div>
+
+            <div className="breakdown-row breakdown-bureau">
+              <span className="bd-label">Administration Bureau</span>
+              <span className="bd-count">{fmt(BUREAUS.admin.total)}</span>
+              <span className="bd-bar">
+                <span className="bd-fill" style={{ width: `${(BUREAUS.admin.total / CITYWIDE.fullDuty) * 100}%` }} />
+              </span>
+            </div>
+
+            <div className="breakdown-row breakdown-bureau">
+              <span className="bd-label">Chief of Staff + Chief's Office</span>
+              <span className="bd-count">{fmt(BUREAUS.chiefOfStaff.total + BUREAUS.chiefsOffice.total)}</span>
+              <span className="bd-bar">
+                <span className="bd-fill" style={{ width: `${((BUREAUS.chiefOfStaff.total + BUREAUS.chiefsOffice.total) / CITYWIDE.fullDuty) * 100}%` }} />
+              </span>
+            </div>
+
+            <div className="breakdown-row breakdown-total">
+              <span className="bd-label">Total Full Duty</span>
+              <span className="bd-count">{fmt(CITYWIDE.fullDuty)}</span>
+              <span className="bd-bar"></span>
+            </div>
           </div>
         </section>
 
