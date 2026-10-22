@@ -26,7 +26,7 @@ export const BUREAUS_FULL_DUTY = {
       tara: { name: 'Taraval', code: 'TARA', capt: 1, lt: 4, sgt: 13, off: 64, total: 82 },
       tend: { name: 'Tenderloin', code: 'TEND', capt: 1, lt: 4, sgt: 14, off: 95, total: 114 },
       dmac: {
-        name: 'DMACC',
+        name: 'Drug Market Agency Coordination Center',
         code: 'DMAC',
         capt: 1,
         lt: 2,
@@ -42,7 +42,7 @@ export const BUREAUS_FULL_DUTY = {
         ]
       },
       fob: { name: 'FOB HQ', code: 'FOB', capt: 3, lt: 3, sgt: 5, off: 11, total: 27, deputyChief: 1, commander: 4 },
-      ced: { name: 'CED', code: 'CED', lt: 1, sgt: 3, off: 4, total: 8 },
+      ced: { name: 'Community Engagement Division', code: 'CED', lt: 1, sgt: 3, off: 4, total: 8 },
     },
   },
   investigations: {
@@ -50,7 +50,7 @@ export const BUREAUS_FULL_DUTY = {
     total: 222,
     units: {
       burg: { name: 'Burglary', total: 13, sgt: 11, off: 2 },
-      cgic: { name: 'Criminal Gang Intelligence', total: 6, lt: 1, sgt: 4, off: 1 },
+      cgic: { name: 'Crime Gun Investigative Center', total: 6, lt: 1, sgt: 4, off: 1 },
       csi: { name: 'Crime Scene Investigations', total: 12, lt: 1, sgt: 1, off: 10 },
       fcu: { name: 'Financial Crimes', total: 2, sgt: 2 },
       gene: { name: 'General Work', total: 18, lt: 1, sgt: 15, off: 2 },
@@ -59,9 +59,9 @@ export const BUREAUS_FULL_DUTY = {
       orc: { name: 'Organized Retail Crime', total: 7, sgt: 5, off: 2 },
       robb: { name: 'Robbery', total: 12, lt: 1, sgt: 10, off: 1 },
       sid: { name: 'Special Investigations', total: 27, lt: 1, sgt: 10, off: 16 },
-      siu: { name: 'Special Investigations Unit', total: 44, capt: 1, lt: 4, sgt: 17, off: 22 },
+      siu: { name: 'Strategic Investigations Unit', total: 44, capt: 1, lt: 4, sgt: 17, off: 22 },
       svu: { name: 'Special Victims Unit', total: 31, capt: 1, lt: 1, sgt: 25, inspector: 2, off: 2 },
-      vri: { name: 'Violence Reduction', total: 3, sgt: 2, off: 1 },
+      vri: { name: 'Violence Reduction Initiative', total: 3, sgt: 2, off: 1 },
       vrt: { name: 'Violence Reduction Team', total: 25, lt: 1, sgt: 10, off: 14 },
     },
   },
@@ -80,11 +80,11 @@ export const BUREAUS_FULL_DUTY = {
     total: 122,
     units: {
       doc: { name: 'Department Operations Center', total: 4, lt: 1, sgt: 2, off: 1 },
-      hsu: { name: 'Homeless Services Unit', total: 13, lt: 1, sgt: 2, off: 10 },
-      mta: { name: 'MTA Transit', total: 31, lt: 2, sgt: 3, off: 26 },
+      hsu: { name: 'Homeland Security Unit', total: 13, lt: 1, sgt: 2, off: 10 },
+      mta: { name: 'Traffic Enforcement', total: 31, lt: 2, sgt: 3, off: 26 },
       muni: { name: 'MUNI Enforcement', total: 5, sgt: 1, off: 4 },
       sob: { name: 'Special Ops HQ', total: 3, deputyChief: 1, commander: 1, capt: 1 },
-      tact: { name: 'Tactical Unit', total: 59, capt: 1, lt: 3, sgt: 6, off: 49 },
+      tact: { name: 'Tactical Company', total: 59, capt: 1, lt: 3, sgt: 6, off: 49 },
       tci: { name: 'Tenderloin Community Initiative', total: 7, lt: 1, sgt: 6 },
     },
   },
@@ -94,7 +94,7 @@ export const BUREAUS_FULL_DUTY = {
     units: {
       acad: { name: 'Police Academy', total: 28, capt: 1, lt: 3, sgt: 7, off: 17 },
       admi: { name: 'Admin HQ', total: 4, deputyChief: 1, commander: 1, capt: 1, off: 1 },
-      cis: { name: 'Crime Info Services', total: 1, lt: 1 },
+      cis: { name: 'Crime Information Services', total: 1, lt: 1 },
       fto: { name: 'Field Training', total: 4, lt: 1, sgt: 1, off: 2 },
       prop: { name: 'Property', total: 6, lt: 1, sgt: 1, off: 4 },
       staf: { name: 'Staffing', total: 15, capt: 1, lt: 2, sgt: 5, off: 7 },
