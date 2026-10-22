@@ -171,3 +171,31 @@ export function getShiftCalls(station: string, shift: 'days' | 'elevens' | 'swin
     C: Math.round(result.C * 10) / 10,
   };
 }
+
+// Median response times in minutes by station and priority (30-day data)
+export interface ResponseTimeStats {
+  median: number;
+  count: number;
+}
+
+export interface StationResponseTimes {
+  A: ResponseTimeStats;
+  B: ResponseTimeStats;
+  C: ResponseTimeStats;
+}
+
+export const RESPONSE_TIMES: Record<string, StationResponseTimes> = {
+  cent: { A: { median: 7.1, count: 478 }, B: { median: 26.9, count: 701 }, C: { median: 49.4, count: 448 } },
+  sout: { A: { median: 7.4, count: 863 }, B: { median: 25.4, count: 1075 }, C: { median: 51.2, count: 903 } },
+  potr: { A: { median: 7.7, count: 440 }, B: { median: 25.1, count: 486 }, C: { median: 60.2, count: 351 } },
+  miss: { A: { median: 6.8, count: 722 }, B: { median: 22.1, count: 829 }, C: { median: 49.6, count: 832 } },
+  nort: { A: { median: 8.1, count: 567 }, B: { median: 33.1, count: 696 }, C: { median: 58.6, count: 502 } },
+  park: { A: { median: 7.5, count: 162 }, B: { median: 18.0, count: 272 }, C: { median: 34.8, count: 251 } },
+  rich: { A: { median: 9.4, count: 238 }, B: { median: 18.1, count: 331 }, C: { median: 36.5, count: 293 } },
+  ingl: { A: { median: 9.0, count: 389 }, B: { median: 22.9, count: 423 }, C: { median: 44.1, count: 335 } },
+  tara: { A: { median: 9.4, count: 325 }, B: { median: 18.7, count: 491 }, C: { median: 45.8, count: 273 } },
+  tend: { A: { median: 6.1, count: 494 }, B: { median: 36.6, count: 532 }, C: { median: 63.0, count: 728 } },
+};
+
+// Target response times in minutes
+export const RESPONSE_TARGETS = { A: 8, B: 20, C: 60 };

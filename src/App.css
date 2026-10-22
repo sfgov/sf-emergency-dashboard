@@ -528,6 +528,58 @@ button:focus-visible, select:focus-visible {
   color: #d97706;
 }
 
+.st-response-section {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.st-response-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.st-response-grid {
+  display: flex;
+  gap: 12px;
+}
+
+.st-response-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 16px;
+  background: white;
+  border-radius: var(--radius-sm);
+  min-width: 70px;
+}
+
+.st-response-box.st-over {
+  background: #fef2f2;
+}
+
+.st-response-priority {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.st-response-value {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.st-over .st-response-value {
+  color: #dc2626;
+}
+
+.st-response-target {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
 .st-detail-note {
   margin-top: 12px;
   font-size: 12px;

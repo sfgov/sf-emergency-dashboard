@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import {
   CITYWIDE, STATION_TOTAL, BUREAUS, DAILY_ON_DUTY
 } from './data/staffing';
-import { CALL_DATA, type StationCalls } from './data/calls';
+import { CALL_DATA, RESPONSE_TIMES, RESPONSE_TARGETS, type StationCalls } from './data/calls';
 import './App.css';
 
 const STATION_NAMES: Record<string, string> = {
@@ -58,6 +58,7 @@ function App() {
       const stationInfo = BUREAUS.fieldOps.units[key];
 
       const shiftCalls = getShiftCallsPerHour(callStats);
+      const responseTimes = RESPONSE_TIMES[key];
 
       return {
         key,
@@ -69,6 +70,7 @@ function App() {
         totalCalls: Math.round(totalCalls),
         callsPerOfficer: patrolOfficers > 0 ? totalCalls / patrolOfficers : 0,
         shiftCalls,
+        responseTimes,
         ranks: {
           capt: stationInfo?.capt || 0,
           lt: stationInfo?.lt || 0,
@@ -217,6 +219,28 @@ function App() {
                           })()}
                         </tbody>
                       </table>
+                      {station.responseTimes && (
+                        <div className="st-response-section">
+                          <div className="st-response-title">Median response time (minutes)</div>
+                          <div className="st-response-grid">
+                            <div className={`st-response-box ${station.responseTimes.A.median > RESPONSE_TARGETS.A ? 'st-over' : ''}`}>
+                              <span className="st-response-priority st-pri-a">A</span>
+                              <span className="st-response-value">{station.responseTimes.A.median}</span>
+                              <span className="st-response-target">target: {RESPONSE_TARGETS.A}</span>
+                            </div>
+                            <div className={`st-response-box ${station.responseTimes.B.median > RESPONSE_TARGETS.B ? 'st-over' : ''}`}>
+                              <span className="st-response-priority st-pri-b">B</span>
+                              <span className="st-response-value">{station.responseTimes.B.median}</span>
+                              <span className="st-response-target">target: {RESPONSE_TARGETS.B}</span>
+                            </div>
+                            <div className={`st-response-box ${station.responseTimes.C.median > RESPONSE_TARGETS.C ? 'st-over' : ''}`}>
+                              <span className="st-response-priority">C</span>
+                              <span className="st-response-value">{station.responseTimes.C.median}</span>
+                              <span className="st-response-target">target: {RESPONSE_TARGETS.C}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
