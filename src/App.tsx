@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react';
 import {
-  CITYWIDE, STATION_TOTAL, BUREAUS, MODIFIED_DUTY_BREAKDOWN,
-  DAILY_ON_DUTY
+  CITYWIDE, STATION_TOTAL, BUREAUS, DAILY_ON_DUTY
 } from './data/staffing';
 import { CALL_DATA, type StationCalls } from './data/calls';
 import './App.css';
@@ -77,6 +76,7 @@ function App() {
     { key: 'admin', label: 'Admin', value: BUREAUS.admin.total, units: (BUREAUS.admin as any).units },
     { key: 'chiefOfStaff', label: 'Chief of Staff', value: BUREAUS.chiefOfStaff.total, units: (BUREAUS.chiefOfStaff as any).units },
     { key: 'chiefsOffice', label: "Chief's Office", value: BUREAUS.chiefsOffice.total, units: (BUREAUS.chiefsOffice as any).units },
+    { key: 'partTime', label: 'Part-time officers', value: CITYWIDE.partTime },
   ];
 
   return (
@@ -86,32 +86,17 @@ function App() {
           <div className="header-text">
             <h1>SFPD staffing analysis</h1>
           </div>
+          <div className="header-stats">
+            <div className="header-stat">
+              <span className="header-stat-label">Staffing Target</span>
+              <span className="header-stat-value">{CITYWIDE.target.toLocaleString()}</span>
+            </div>
+            <div className="header-stat">
+              <span className="header-stat-label">Current City Staffing</span>
+              <span className="header-stat-value">{CITYWIDE.currentStaffing.toLocaleString()}</span>
+            </div>
+          </div>
         </header>
-
-        <section className="card">
-          <div className="card-header">
-            <h2>Staffing overview</h2>
-          </div>
-
-          <div className="waterfall">
-            <div className="wf-row wf-start">
-              <span className="wf-label">Target authorized</span>
-              <span className="wf-value">{CITYWIDE.target.toLocaleString()}</span>
-            </div>
-            <div className="wf-row wf-subtract">
-              <span className="wf-label">Shortage</span>
-              <span className="wf-value">−{CITYWIDE.shortage.toLocaleString()}</span>
-            </div>
-            <div className="wf-row wf-result">
-              <span className="wf-label">Full duty sworn</span>
-              <span className="wf-value">{CITYWIDE.fullDuty.toLocaleString()}</span>
-            </div>
-            <div className="wf-row wf-note">
-              <span className="wf-label">+ {MODIFIED_DUTY_BREAKDOWN.total} modified duty</span>
-              <span className="wf-value">{CITYWIDE.totalSworn.toLocaleString()} total</span>
-            </div>
-          </div>
-        </section>
 
         <section className="card">
           <div className="card-header">

@@ -2,8 +2,10 @@ export const CITYWIDE = {
   target: 2257,
   totalSworn: 1847,
   fullDuty: 1676,
+  partTime: 37,
   modifiedDuty: 171,
   recruits: 84,
+  get currentStaffing() { return this.fullDuty + this.partTime; },
   get shortage() { return this.target - this.fullDuty - this.recruits; },
   get shortagePercent() { return Math.round((this.shortage / this.target) * 100); },
 };
