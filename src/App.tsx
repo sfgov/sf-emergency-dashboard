@@ -14,6 +14,7 @@ const STATION_NAMES: Record<string, string> = {
 
 function App() {
   const [expandedStation, setExpandedStation] = useState<string | null>(null);
+  const [expandedBureau, setExpandedBureau] = useState<string | null>(null);
 
   const stationData = useMemo(() => {
     const stations = Object.keys(STATION_NAMES) as Array<keyof typeof DAILY_ON_DUTY>;
@@ -46,12 +47,13 @@ function App() {
   }, []);
 
   const bureauBreakdown = [
-    { label: 'Field Operations', value: BUREAUS.fieldOps.total, detail: `${STATION_TOTAL} in stations` },
-    { label: 'Investigations', value: BUREAUS.investigations.total },
-    { label: 'Airport', value: BUREAUS.airport.total },
-    { label: 'Special Ops', value: BUREAUS.specialOps.total },
-    { label: 'Admin', value: BUREAUS.admin.total },
-    { label: "Chief's Office", value: BUREAUS.chiefOfStaff.total + BUREAUS.chiefsOffice.total },
+    { key: 'fieldOps', label: 'Field Operations', value: BUREAUS.fieldOps.total, detail: `${STATION_TOTAL} in stations`, units: BUREAUS.fieldOps.units },
+    { key: 'investigations', label: 'Investigations', value: BUREAUS.investigations.total, units: (BUREAUS.investigations as any).units },
+    { key: 'airport', label: 'Airport', value: BUREAUS.airport.total, units: (BUREAUS.airport as any).units },
+    { key: 'specialOps', label: 'Special Ops', value: BUREAUS.specialOps.total, units: (BUREAUS.specialOps as any).units },
+    { key: 'admin', label: 'Admin', value: BUREAUS.admin.total, units: (BUREAUS.admin as any).units },
+    { key: 'chiefOfStaff', label: 'Chief of Staff', value: BUREAUS.chiefOfStaff.total, units: (BUREAUS.chiefOfStaff as any).units },
+    { key: 'chiefsOffice', label: "Chief's Office", value: BUREAUS.chiefsOffice.total, units: (BUREAUS.chiefsOffice as any).units },
   ];
 
   return (
@@ -200,20 +202,50 @@ function App() {
         <section className="card">
           <div className="card-header">
             <h2>Where officers are assigned</h2>
-            <p>{CITYWIDE.fullDuty.toLocaleString()} full duty officers by bureau</p>
+            <p>{CITYWIDE.fullDuty.toLocaleString()} full duty officers by bureau. Click to see unit breakdown.</p>
           </div>
 
           <div className="bureau-breakdown">
-            {bureauBreakdown.map(b => (
-              <div key={b.label} className="bb-row">
-                <span className="bb-label">{b.label}</span>
-                <span className="bb-bar">
-                  <span className="bb-fill" style={{ width: `${(b.value / CITYWIDE.fullDuty) * 100}%` }} />
-                </span>
-                <span className="bb-value">{b.value}</span>
-                <span className="bb-pct">{Math.round((b.value / CITYWIDE.fullDuty) * 100)}%</span>
-              </div>
-            ))}
+            {bureauBreakdown.map(b => {
+              const isExpanded = expandedBureau === b.key;
+              const units = b.units ? Object.values(b.units) as Array<{name: string; total: number; capt?: number; lt?: number; sgt?: number; off?: number}> : [];
+
+              return (
+                <div key={b.key} className="bb-section">
+                  <button
+                    className={`bb-row bb-clickable ${isExpanded ? 'bb-expanded' : ''}`}
+                    onClick={() => setExpandedBureau(isExpanded ? null : b.key)}
+                  >
+                    <span className="bb-label">
+                      <span className="bb-expand">{units.length > 0 ? (isExpanded ? '▼' : '▶') : ''}</span>
+                      {b.label}
+                    </span>
+                    <span className="bb-bar">
+                      <span className="bb-fill" style={{ width: `${(b.value / CITYWIDE.fullDuty) * 100}%` }} />
+                    </span>
+                    <span className="bb-value">{b.value}</span>
+                    <span className="bb-pct">{Math.round((b.value / CITYWIDE.fullDuty) * 100)}%</span>
+                  </button>
+
+                  {isExpanded && units.length > 0 && (
+                    <div className="bb-units">
+                      {units.map((unit: any) => (
+                        <div key={unit.name} className="bb-unit">
+                          <span className="bb-unit-name">{unit.name}</span>
+                          <span className="bb-unit-ranks">
+                            {unit.capt ? `${unit.capt} Capt` : ''}
+                            {unit.lt ? ` ${unit.lt} Lt` : ''}
+                            {unit.sgt ? ` ${unit.sgt} Sgt` : ''}
+                            {unit.off ? ` ${unit.off} Off` : ''}
+                          </span>
+                          <span className="bb-unit-total">{unit.total}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
             <div className="bb-row bb-total">
               <span className="bb-label">Total</span>
               <span className="bb-bar" />
