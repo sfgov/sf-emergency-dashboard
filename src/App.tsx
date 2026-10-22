@@ -123,8 +123,10 @@ function App() {
               <span className="st-name">Station</span>
               <span className="st-col">Total</span>
               <span className="st-col">Patrol/day</span>
-              <span className="st-col-wide">By shift</span>
-              <span className="st-col">Footbeats</span>
+              <span className="st-col">Day<br/><span className="st-hours">6a–4p</span></span>
+              <span className="st-col">Swing<br/><span className="st-hours">3p–1a</span></span>
+              <span className="st-col">Night<br/><span className="st-hours">9p–7a</span></span>
+              <span className="st-col">Footbeats<br/><span className="st-hours">11a–9p</span></span>
               <span className="st-col">Calls/day</span>
             </div>
 
@@ -144,11 +146,9 @@ function App() {
                     </span>
                     <span className="st-col">{station.ranks.total}</span>
                     <span className="st-col">{station.patrolOfficers}</span>
-                    <span className="st-col-wide st-shift-cols">
-                      <span>{station.officers.days}D</span>
-                      <span>{station.officers.swings}S</span>
-                      <span>{station.officers.mids}M</span>
-                    </span>
+                    <span className="st-col">{station.officers.days}</span>
+                    <span className="st-col">{station.officers.swings}</span>
+                    <span className="st-col">{station.officers.mids}</span>
                     <span className="st-col">{station.officers.elevens}</span>
                     <span className="st-col">{station.totalCalls}</span>
                   </button>
